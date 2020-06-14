@@ -1,0 +1,20 @@
+//这里保存了产品的风险等级
+export const riskLevels=[{
+    value:'1',
+    label:'谨慎型(R1)'
+    },
+    {
+    value:'2',
+    label:'稳健型(R2)'
+    },
+    {
+    value:'3',
+    label:'平衡型(R3)'
+    },{
+    value:'4',
+    label:'进取型(R4)'
+    },{
+    value:'5',
+    label:'激进型(R5)'
+    }
+]
