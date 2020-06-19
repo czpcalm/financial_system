@@ -1,23 +1,14 @@
 <template>
     <div class="fillcontain">
         <head-top></head-top>
-        <el-button class="addbtn" type="primary" @click="showAddDept">添加用户</el-button>
-        <el-dialog title="添加用户" v-model="addFormVisible">
+        <el-button class="addbtn" type="primary" @click="showAddDept">添加部门</el-button>
+        <el-dialog title="添加部门" v-model="addFormVisible">
                 <el-form :model="deptForm">
-                    <el-form-item label="用户名称" label-width="100px">
+                    <el-form-item label="部门名称" label-width="100px">
                         <el-input v-model="deptForm.name" auto-complete="off"></el-input>
                     </el-form-item>
-                    <el-form-item label="用户密码" label-width="100px">
-                        <el-input type="password" v-model="deptForm.pwd" auto-complete="off"></el-input>
-                    </el-form-item>
-                    <el-form-item label="电话" label-width="100px">
-                        <el-input v-model="deptForm.phone" auto-complete="off"></el-input>
-                    </el-form-item>
-                    <el-form-item label="邮箱" label-width="100px">
-                        <el-input v-model="deptForm.email" auto-complete="off"></el-input>
-                    </el-form-item>
-                    <el-form-item label="用户权限" label-width="100px">
-                        <el-select v-model="deptForm.role" placeholder="请选择该用户预设的角色">
+                    <el-form-item label="部门权限" label-width="100px">
+                        <el-select v-model="deptForm.role" placeholder="请选择该部门预设的角色">
                             <el-option
                                 v-for="item in options"
                                 :key="item.value"
@@ -60,20 +51,12 @@
                   prop="create_time">
                 </el-table-column> -->
                 <el-table-column
-                  label="用户编号"
+                  label="部门编号"
                   prop="dept_id">
                 </el-table-column>
                 <el-table-column
-                  label="用户名称"
+                  label="部门名称"
                   prop="dept_name">
-                </el-table-column>
-                <el-table-column
-                  label="电话"
-                  prop="phone">
-                </el-table-column>
-                <el-table-column
-                  label="邮箱"
-                  prop="email">
                 </el-table-column>
                 <!-- <el-table-column
                   label="角色权限"
@@ -101,16 +84,13 @@
                   :total="count">
                 </el-pagination>
             </div>
-            <el-dialog title="修改用户" v-model="dialogFormVisible">
+            <el-dialog title="修改部门" v-model="dialogFormVisible">
                 <el-form :model="selectDept">
-                    <el-form-item label="用户名称" label-width="100px">
+                    <el-form-item label="部门名称" label-width="100px">
                         <el-input v-model="selectDept.name" auto-complete="off"></el-input>
                     </el-form-item>
-                    <el-form-item label="用户密码" label-width="100px">
-                        <el-input v-model="selectDept.pwd" auto-complete="off"></el-input>
-                    </el-form-item>
-                    <el-form-item label="用户权限" label-width="100px">
-                        <el-select v-model="selectDept.role" placeholder="请选择该用户预设的角色">
+                    <el-form-item label="部门权限" label-width="100px">
+                        <el-select v-model="selectDept.role" placeholder="请选择该部门预设的角色">
                             <el-option
                                 v-for="item in options"
                                 :key="item.value"
@@ -132,7 +112,7 @@
 
 <script>
     import headTop from '../components/headTop'
-    import {getUserList, addUser, updateUser, deleteUser, addDeptRole} from '@/api/getData'
+    import {getDeptList, addDepartment, updateDepartment, deleteDepartment, addDeptRole} from '@/api/getData'
     export default {
         data(){
             return {
@@ -144,9 +124,6 @@
                 deptForm: {
                     name: '',
                     role: '',
-                    pwd: '',
-                    phone: '',
-                    email: '',
                 },
                 options: [ // TODO: 获取角色列表
                     { 
@@ -161,7 +138,6 @@
                 selectDept: {
                     name: '',
                     role: '',
-                    pwd: '',
                 },
                 dialogFormVisible: false,
                 addFormVisible:false,
@@ -176,14 +152,12 @@
         methods: {
             async initData(){
     			try{
-                    const depts = await getUserList();
+                    const depts = await getDeptList();
                     depts.forEach((item,index)=>{
                         this.tableData.push({
                             create_time:item.createTime,
                             dept_id:item.id,
-                            dept_name:item.username,
-                            phone:item.phone,
-                            email:item.email,
+                            dept_name:item.name,
                             // auth_role:
                         });
                     });
@@ -207,7 +181,7 @@
                 try{
                     // TODO: 删除该部门的用户
                     try {
-                        const res = await deleteUser(row.dept_id);
+                        const res = await deleteDepartment(row.dept_id);
                     } catch(err) {
                         console.log(err.message)
                     }
@@ -215,7 +189,7 @@
                     // if (res.status == 1) {
                         this.$message({
                             type: 'success',
-                            message: '删除用户成功'
+                            message: '删除部门成功'
                         });
                         this.tableData.splice(index, 1);
                     // }else{
@@ -226,7 +200,7 @@
                         type: 'error',
                         message: err.message
                     });
-                    console.log('删除用户失败')
+                    console.log('删除部门失败')
                 }
             },
             showAddDept(){
@@ -235,13 +209,7 @@
             async addDept(){
                 try{
                     try {
-                        var post_data = {
-                            "username": this.deptForm.name,
-                            "password": this.deptForm.pwd,
-                            "email": this.deptForm.email,
-                            "phone": this.deptForm.phone,
-                        }
-                        const res = await addUser(post_data);
+                        const res = await addDepartment(this.deptForm.name);
                         // TODO: 插入角色权限
                         // addDeptRole(this.deptForm.id, this.deptForm.role)
                     } catch(err) {
@@ -251,7 +219,7 @@
                     // if (res.status == 1) {
                         this.$message({
                             type: 'success',
-                            message: '添加用户成功'
+                            message: '添加部门成功'
                         });
                         location.reload()
                     // }else{
@@ -262,14 +230,14 @@
                         type: 'error',
                         message: err.message
                     });
-                    console.log('添加用户失败')
+                    console.log('添加部门失败')
                 }
             },
             async updateDept(){
                 this.dialogFormVisible = false;
                 try{
                      try {
-                        const res = await updateUser(this.selectDept.name, this.selectDept.pwd)
+                        const res = await updateDepartment(this.selectDept.name)
                         // TODO: 更新角色权限
                         // updateDeptRole(this.deptForm.id, this.deptForm.role)
                     } catch(err) {
@@ -279,7 +247,7 @@
                     // if (result.status == 1) {
                         this.$message({
                             type: 'success',
-                            message: '更新用户成功'
+                            message: '更新部门成功'
                         });
                         location.reload()
                     // }else{
@@ -290,7 +258,6 @@
                         type: 'error',
                         message: res.message
                     });
-                    console.log('更新用户失败')
                 }
             },
         },

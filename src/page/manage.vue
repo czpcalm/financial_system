@@ -15,8 +15,9 @@
 						<el-menu-item index="orderList">订单列表</el-menu-item>
 					</el-submenu>
 					<el-submenu index="4">
-						<template slot="title"><i class="el-icon-star-on"></i>用户管理</template>
+						<template slot="title"><i class="el-icon-star-on"></i>人事管理</template>
 						<el-menu-item index="userList">用户列表</el-menu-item>
+						<el-menu-item index="deptList">部门列表</el-menu-item>
 						<!-- <el-menu-item index="newMember">用户数据</el-menu-item> -->
 					</el-submenu>
 

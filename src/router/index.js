@@ -9,6 +9,7 @@ const home = r => require.ensure([], () => r(require('@/page/home')), 'home');
 const addShop = r => require.ensure([], () => r(require('@/page/addShop')), 'addShop');
 const addProduct = r => require.ensure([], () => r(require('@/page/addProduct')), 'addProduct');
 const userList = r => require.ensure([], () => r(require('@/page/userList')), 'userList');
+const deptList = r => require.ensure([], () => r(require('@/page/deptList')), 'deptList');
 const providerList = r => require.ensure([], () => r(require('@/page/providerList')), 'providerList');
 const productList = r => require.ensure([], () => r(require('@/page/productList')), 'productList');
 const orderList = r => require.ensure([], () => r(require('@/page/orderList')), 'orderList');
@@ -46,7 +47,11 @@ const routes = [
 			path: '/userList',
 			component: userList,
 			meta: ['数据管理', '用户列表'],
-		},{
+		}, {
+			path: '/deptList',
+			component: deptList,
+			meta: ['数据管理', '部门列表'],
+		}, {
 			path: '/providerList',
 			component: providerList,
 			meta: ['数据管理', '商家列表'],
