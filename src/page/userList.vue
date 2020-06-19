@@ -109,6 +109,12 @@
                     <el-form-item label="用户密码" label-width="100px">
                         <el-input v-model="selectDept.pwd" auto-complete="off"></el-input>
                     </el-form-item>
+                    <el-form-item label="电话" label-width="100px">
+                        <el-input v-model="selectDept.phone" auto-complete="off"></el-input>
+                    </el-form-item>
+                    <el-form-item label="邮箱" label-width="100px">
+                        <el-input v-model="selectDept.email" auto-complete="off"></el-input>
+                    </el-form-item>
                     <el-form-item label="用户权限" label-width="100px">
                         <el-select v-model="selectDept.role" placeholder="请选择该用户预设的角色">
                             <el-option
@@ -269,7 +275,14 @@
                 this.dialogFormVisible = false;
                 try{
                      try {
-                        const res = await updateUser(this.selectDept.name, this.selectDept.pwd)
+                         var put_data = {
+                            "id": this.selectDept.dept_id,
+                            "username": this.selectDept.name,
+                            "password": this.selectDept.pwd,
+                            "email": this.selectDept.email,
+                            "phone": this.selectDept.phone,
+                        }
+                        const res = await updateUser(put_data)
                         // TODO: 更新角色权限
                         // updateDeptRole(this.deptForm.id, this.deptForm.role)
                     } catch(err) {

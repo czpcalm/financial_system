@@ -28,7 +28,7 @@ export const getUserList = () => fetch('/user/selectAll');
 export const addUser = data => fetch('/user/insertSelective', data, "POST");
 
 //修改某个用户
-export const updateUser = (id, name) => fetch('/user/update?id='+id+'&name='+name, {}, "PUT");
+export const updateUser = data => fetch('/user/update?id='+data.id+'&username='+data.username+"&password="+data.password+"&email="+data.email+"&phone="+data.phone, {}, "PUT");
 
 //删除某个部门
 export const deleteUser = id => fetch('/user/delete?id='+id, {}, "DELETE");

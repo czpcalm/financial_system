@@ -237,7 +237,7 @@
                 this.dialogFormVisible = false;
                 try{
                      try {
-                        const res = await updateDepartment(this.selectDept.name)
+                        const res = await updateDepartment(this.selectDept.dept_id, this.selectDept.name)
                         // TODO: 更新角色权限
                         // updateDeptRole(this.deptForm.id, this.deptForm.role)
                     } catch(err) {
