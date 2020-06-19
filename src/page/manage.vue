@@ -15,21 +15,22 @@
 						<el-menu-item index="orderList">订单列表</el-menu-item>
 					</el-submenu>
 					<el-submenu index="4">
-						<template slot="title"><i class="el-icon-star-on"></i>人事管理</template>
+						<template slot="title"><i class="el-icon-star-on"></i>组织管理</template>
 						<el-menu-item index="userList">用户列表</el-menu-item>
 						<el-menu-item index="deptList">部门列表</el-menu-item>
+						<el-menu-item index="adminList">角色列表</el-menu-item>
 						<!-- <el-menu-item index="newMember">用户数据</el-menu-item> -->
 					</el-submenu>
 
 					<!-- <el-submenu index="5" v-show="isAdmin"> -->
-						<el-submenu index="5">
-						<template slot="title"><i class="el-icon-edit"></i>系统管理</template>
+					<!-- <el-submenu index="5"> -->
+						<!-- <template slot="title"><i class="el-icon-edit"></i>系统管理</template> -->
 						<!-- <el-menu-item index="uploadImg">上传图片</el-menu-item> -->
 						<!--<el-menu-item index="vueEdit">文本编辑</el-menu-item>  -->
-						<el-menu-item index="adminList">权限列表</el-menu-item>
-						<el-menu-item index="adminSet">管理员设置</el-menu-item>
-						<el-menu-item index="explain">说明</el-menu-item>
-					</el-submenu>
+						<!-- <el-menu-item index="adminList">权限列表</el-menu-item> -->
+						<!-- <el-menu-item index="adminSet">管理员设置</el-menu-item> -->
+						<!-- <el-menu-item index="explain">说明</el-menu-item> -->
+					<!-- </el-submenu> -->
 				</el-menu>
 			</el-col>
 			<el-col :span="20" style="height: 100%;overflow: auto;">
