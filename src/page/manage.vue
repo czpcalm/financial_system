@@ -14,11 +14,11 @@
 						<template slot="title"><i class="el-icon-plus"></i>订单管理</template>
 						<el-menu-item index="orderList">订单列表</el-menu-item>
 					</el-submenu>
-					<el-submenu index="4" v-show="showSystemManagement">
+					<el-submenu index="4" v-if="isShow">
 						<template slot="title"><i class="el-icon-star-on"></i>系统管理</template>
-						<el-menu-item index="userList">用户</el-menu-item>
-						<el-menu-item index="deptList">部门</el-menu-item>
-						<el-menu-item index="roleList">角色</el-menu-item>
+						<el-menu-item index="userList" v-show="userShow">用户</el-menu-item>
+						<el-menu-item index="deptList" v-show="deptShow">部门</el-menu-item>
+						<el-menu-item index="roleList" v-show="roleShow">角色</el-menu-item>
 					</el-submenu>
 
 					<!-- <el-submenu index="5"> -->
@@ -42,17 +42,80 @@
 </template>
 
 <script>
+		import {getUserList, getUser, getRolesByUserId, getRolesByDeptId, getOperationsByRoleId, OPERATION} from '@/api/getData'
     export default {
-			data: {
-				showSystemManagement: true,
-			},
-			computed: {
-				defaultActive: function(){
-					// this.isAdmin = (localStorage.getItem("role") == 1) ? true : false
-					this.showSystemManagement = true
-					return this.$route.path.replace('/', '');
+			data() {
+				return {
+					isShow: false,
+					userShow: false,
+					deptShow: false,
+					roleShow: false,
 				}
 			},
+			computed: {
+				defaultActive () {
+					let username = localStorage.getItem("username");
+					this.Authorization(username);
+				}
+			},
+			methods: {
+				async Authorization(username) {
+					let user_id = '';
+					let dept_id = '';
+					let roles = [];
+					let operations = [];
+
+					// 获取用户对应角色
+					const users = await getUserList();
+					users.data.forEach((item, index) => {
+							if (item.username == username) {
+									user_id = item.id;
+							}
+					})
+					if (typeof(user_id) != 'undefined') {
+						const roles_by_user_id = await getRolesByUserId(user_id);
+						roles.push(...roles_by_user_id.data.userIdList);
+					}
+
+					// 获取部门对应角色
+					const user = await getUser(user_id);
+					dept_id = user.data.departmentId;				
+					if (typeof(dept_id) != 'undefined') {
+						const roles_by_dept_id = await getRolesByDeptId(dept_id);
+						roles.push(...roles_by_dept_id.data.roleIdList);
+					}
+
+					// 获取角色对应操作
+					roles.forEach(async (role_id, index) => {
+						const operations_by_role_id = await getOperationsByRoleId(role_id);
+						if (operations_by_role_id.data.operationIdList.length > 0) {
+								console.log(operations_by_role_id)
+								operations_by_role_id.data.operationIdList.forEach((it, idx) => {
+									// operations.push(it);
+									localStorage.setItem(it, true);
+									if (it == 1) {
+										this.isShow = true;
+										this.userShow = true;
+										this.deptShow = true;
+										this.roleShow = true;
+									}
+									if (it == 3) {
+										this.isShow = true;
+										this.userShow = true;
+									}
+									if (it == 5) {
+										this.isShow = true;
+										this.roleShow = true;
+									}
+									if (it == 7) {
+										this.isShow = true;
+										this.deptShow = true;
+									}
+								})
+						} 
+					})
+				}
+			}
     }
 </script>
 

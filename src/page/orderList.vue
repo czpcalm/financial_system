@@ -27,7 +27,7 @@
 			            <span>{{ props.row.restaurant_address }}</span>
 			          </el-form-item> -->
                       
-                       <el-form-item label="用户ID">
+                <el-form-item label="用户ID">
 			            <span>{{ props.row.user_id }}</span>
 			          </el-form-item>
                       <el-form-item label="库ID">
@@ -124,7 +124,7 @@
             async getOrders(){
                 const Orders = await getOrderList();
                 this.tableData = [];
-                Orders.forEach((item, index) => {
+                Orders.data.forEach((item, index) => {
                     const tableData = {};
                     tableData.id = item.id;
                     tableData.total_amount = item.amount;

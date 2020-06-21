@@ -8,7 +8,7 @@
                         <el-input v-model="createForm.role_name" auto-complete="off"></el-input>
                     </el-form-item>
                     <el-form-item label="菜单权限" label-width="100px">
-                        <el-select v-model="createForm.operation_id" placeholder="请选择角色允许的操作">
+                        <el-select multiple collapse-tags v-model="createForm.operation_ids" placeholder="请选择角色允许的操作">
                             <el-option
                                 v-for="item in operations"
                                 :key="item.value"
@@ -86,7 +86,7 @@
                         <el-input v-model="updateForm.role_name" auto-complete="off"></el-input>
                     </el-form-item>
                     <el-form-item label="菜单权限" label-width="100px">
-                        <el-select v-model="updateForm.operation_id" placeholder="请选择角色允许的操作">
+                        <el-select multiple collapse-tags v-model="updateForm.operation_ids" placeholder="请选择角色允许的操作">
                             <el-option
                                 v-for="item in operations"
                                 :key="item.value"
@@ -109,7 +109,7 @@
 <script>
     import headTop from '../components/headTop'
     import {getRoleList, addRole, updateRole, deleteRole} from '@/api/getData'
-    import {getOperationList} from '@/api/getData'
+    import {getOperationList, getOperationsByRoleId, addRoleOperation, getRoleOperationList} from '@/api/getData'
     export default {
         data(){
             return {
@@ -122,11 +122,11 @@
 
                 createForm: {
                     role_name: '',
-                    operation_id: '',
+                    operation_ids: [],
                 },
                 updateForm: {
                     role_name: '',
-                    operation_id: '',
+                    operation_ids: [],
                 },
 
                 operations: [],
@@ -159,14 +159,26 @@
                     // 初始化角色信息
                     this.tableData = []
                     const roles = await getRoleList();
-                    roles.data.forEach((item,index)=>{
+                    roles.data.forEach(async (item,index)=>{
                         let role_id = item.id;
                         let role_name = item.name;
-                        // TODO: const operation = await getRoleOperation(role_id)
+                        let operation_name = '';
+
+                        const operations_by_role_id = await getOperationsByRoleId(role_id);
+                        if (operations_by_role_id.data.operationIdList.length > 0) {
+                            operations_by_role_id.data.operationIdList.forEach((it, idx) => {
+                                this.operations.forEach((e, i) => {
+                                    if (e.value == it) {
+                                        operation_name += e.label + '; '
+                                    }
+                                })
+                            })
+                        }
+
                         this.tableData.push({
                             role_id: role_id,
                             role_name: role_name,
-                            // TODO: operation_name: operation.name,
+                            operation_name: operation_name,
                         });
                     });
     			}catch(err){
@@ -224,13 +236,22 @@
                             name: this.createForm.role_name,
                         });
 
-                        // TODO: 添加角色-菜单绑定
-                        // const role_operation_result = await addRoleOperation({
-                        //     role_id: role_result.id,
-                        //     operation_id: this.createForm.operation_id,
-                        // });
+                        // 根据角色名字查询角色编号
+                        let roles = await getRoleList();
+                        roles.data.forEach((item, index) => {
+                            if (item.name == this.createForm.role_name) {
+                                role_result.id = item.id;
+                            }
+                        })
 
-                        // TODO: 添加角色-数据绑定
+                        // 添加角色-菜单绑定
+                        this.createForm.operation_ids.forEach(async (item, index) => {
+                            console.log(item)
+                            const role_operation_result = await addRoleOperation({
+                                "roleId": role_result.id,
+                                "operationId": item,
+                            });
+                        })
                     } catch(err) {
                         console.log(err.message)
                     }
@@ -261,8 +282,24 @@
                             "id": this.updateForm.role_id, 
                             "name": this.updateForm.role_name,
                         }
-                        const role_res = await updateRole(role_data)
-                        
+                        const role_result = await updateRole(role_data)
+
+                        // 根据角色名字查询角色编号
+                        let roles = await getRoleList();
+                        roles.data.forEach((item, index) => {
+                            if (item.name == this.updateForm.role_name) {
+                                role_result.id = item.id;
+                            }
+                        })
+
+                        // 角色-菜单绑定
+                        this.updateForm.operation_ids.forEach(async (item, index) => {
+                            const role_operation_result = await addRoleOperation({
+                                "roleId": role_result.id,
+                                "operationId": item,
+                            });
+                        })
+
                         // // 更新角色-操作绑定
                         // var role_operation_data = {
                         //     "role_id": this.updateForm.role_id,

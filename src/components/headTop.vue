@@ -12,6 +12,7 @@
 				<el-dropdown-item command="signout">退出</el-dropdown-item>
 			</el-dropdown-menu>
 		</el-dropdown>
+		<el-button class="addbtn" type="primary" @click="logout">退出登录</el-button>
     </div>
 </template>
 
@@ -35,6 +36,9 @@
     		...mapState(['adminInfo']),
     	},
 		methods: {
+			logout(){
+				window.location = '/#/';
+			},
 			...mapActions(['getAdminData']),
 			async handleCommand(command) {
 				if (command == 'home') {

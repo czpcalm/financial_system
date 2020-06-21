@@ -25,7 +25,7 @@
 </template>
 
 <script>
-	import {login, getAdminInfo, admin} from '@/api/getData'
+	import {login, getAdminInfo, admin, Authorization} from '@/api/getData'
 	import {mapActions, mapState} from 'vuex'
 
 	export default {
@@ -61,7 +61,7 @@
 				this.$refs[formName].validate(async (valid) => {
 					if (valid) {
 						let res = await login({username: this.loginForm.username, password: this.loginForm.password})
-						if (res.success) {
+						if (res.success) {		
 							this.$message({
 		                        type: 'success',
 		                        message: '登录成功'
@@ -73,13 +73,6 @@
 		                        message: res
 		                    });
 						}
-						
-						res = await admin({user_id: res.data.id})
-						if (res.roleId == 1) {
-							localStorage.setItem("role", 1)
-						}else{
-							localStorage.setItem("role", res.roleId)
-						}
 					} else {
 						this.$notify.error({
 							title: '错误',
@@ -88,6 +81,8 @@
 						});
 						return false;
 					}
+
+					localStorage.setItem('username', this.loginForm.username)
 				});
 			},
 		},

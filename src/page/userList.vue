@@ -1,7 +1,7 @@
 <template>
     <div class="fillcontain">
         <head-top></head-top>
-        <el-button class="addbtn" type="primary" @click="showAddUser">添加用户</el-button>
+        <el-button class="addbtn" type="primary" @click="showAddUser" v-if="isShow">添加用户</el-button>
         <el-dialog title="添加用户" v-model="addFormVisible">
                 <el-form :model="createForm">
                     <el-form-item label="用户名称" label-width="100px">
@@ -17,7 +17,7 @@
                         <el-input v-model="createForm.email" auto-complete="off"></el-input>
                     </el-form-item>
                     <el-form-item label="部门选择" label-width="100px">
-                        <el-select v-model="createForm.department_id" placeholder="请选择用户所属的用户">
+                        <el-select v-model="createForm.department_id" placeholder="请选择用户所属的部门">
                             <el-option
                                 v-for="item in departments"
                                 :key="item.value"
@@ -28,7 +28,7 @@
                         </el-select>
                     </el-form-item>
                     <el-form-item label="角色选择" label-width="100px">
-                        <el-select v-model="createForm.role_id" placeholder="请选择用户所属的用户">
+                        <el-select multiple collapse-tags v-model="createForm.role_ids" placeholder="请选择用户所属的角色">
                             <el-option
                                 v-for="item in roles"
                                 :key="item.value"
@@ -78,7 +78,7 @@
                   label="所属角色"
                   prop="role_name">
                 </el-table-column>
-                <el-table-column label="操作" width="200">
+                <el-table-column label="操作" width="200" v-if="isShow">
                   <template slot-scope="scope">
                     <el-button
                       size="mini"
@@ -115,7 +115,7 @@
                         <el-input v-model="updateForm.email" auto-complete="off"></el-input>
                     </el-form-item>
                     <el-form-item label="部门选择" label-width="100px">
-                        <el-select v-model="updateForm.department_id" placeholder="请选择用户所属的用户">
+                        <el-select v-model="updateForm.department_id" placeholder="请选择用户所属的部门">
                             <el-option
                                 v-for="item in departments"
                                 :key="item.value"
@@ -126,7 +126,7 @@
                         </el-select>
                     </el-form-item>
                     <el-form-item label="角色选择" label-width="100px">
-                        <el-select v-model="updateForm.role_id" placeholder="请选择用户所属的用户">
+                        <el-select multiple collapse-tags v-model="updateForm.role_ids" placeholder="请选择用户所属的角色">
                             <el-option
                                 v-for="item in roles"
                                 :key="item.value"
@@ -149,10 +149,12 @@
 <script>
     import headTop from '../components/headTop'
     import {getUserList, addUser, updateUser, deleteUser} from '@/api/getData'
-    import {getDeptList, getRoleList} from '@/api/getData'
+    import {getDeptList, getRoleList, getRolesByUserId, addUserRole} from '@/api/getData'
     export default {
         data(){
             return {
+                isShow: true,
+
                 offset: 0,
                 limit: 20,
                 count: 0,
@@ -166,7 +168,7 @@
                     phone: '',
                     email: '',
                     department_id: '',
-                    role_id: '',
+                    role_ids: [],
                 },
                 updateForm: {
                     user_name: '',
@@ -174,7 +176,7 @@
                     phone: '',
                     email: '',
                     department_id: '',
-                    role_id: '',
+                    role_ids: [],
                 },
 
                 departments: [],
@@ -182,17 +184,60 @@
                 
                 dialogFormVisible: false,
                 addFormVisible:false,
-
-                user_auth: '',
             }
-        },
-        created(){
-            this.initData();
         },
     	components: {
     		headTop,
-    	},
+        },
+        created() {
+            this.initData();
+        },
+        // computed: {
+        //     defaultActive () {
+        //         let username = localStorage.getItem("username");
+        //         this.Authorization(username);
+        //     }
+        // },
         methods: {
+            async Authorization(username) {
+                let user_id = '';
+                let dept_id = '';
+                let roles = [];
+                let operations = [];
+
+                // 获取用户对应角色
+                const users = await getUserList();
+                users.data.forEach((item, index) => {
+                        if (item.username == username) {
+                                user_id = item.id;
+                        }
+                })
+                if (typeof(user_id) != 'undefined') {
+                    const roles_by_user_id = await getRolesByUserId(user_id);
+                    roles.push(...roles_by_user_id.data.userIdList);
+                }
+
+                // 获取部门对应角色
+                const user = await getUser(user_id);
+                dept_id = user.data.departmentId;				
+                if (typeof(dept_id) != 'undefined') {
+                    const roles_by_dept_id = await getRolesByDeptId(dept_id);
+                    roles.push(...roles_by_dept_id.data.roleIdList);
+                }
+
+                // 获取角色对应操作
+                roles.forEach(async (role_id, index) => {
+                    const operations_by_role_id = await getOperationsByRoleId(role_id);
+                    if (operations_by_role_id.data.operationIdList.length > 0) {
+                            operations_by_role_id.data.operationIdList.forEach((it, idx) => {
+                                // operations.push(it);
+                                if (it == 3) {
+                                    this.isShow = true;
+                                }
+                            })
+                    } 
+                })
+            },
             async initData(){
     			try{
                     // 初始化角色信息
@@ -218,25 +263,38 @@
                     // 初始化用户信息
                     this.tableData = []
                     const users = await getUserList();
-                    users.data.forEach((item,index)=>{
+                    users.data.forEach(async (item,index)=>{
                         let user_id = item.id;
                         let user_name = item.username;
                         let phone = item.phone;
                         let email = item.email;
                         let department_name;
+                        let role_name = '';
+
                         this.departments.forEach((it, idx) => {
                             if (it.value == item.departmentId) {
                                 department_name = it.label
                             }
                         })
-                        // TODO: const role = await getUserRole(user_id)
+
+                        const roles_by_user_id = await getRolesByUserId(user_id);
+                        if (roles_by_user_id.data.userIdList.length > 0) {
+                            roles_by_user_id.data.userIdList.forEach((it, idx) => {
+                                this.roles.forEach((e, i) => {
+                                    if (e.value == it) {
+                                        role_name += e.label + '; '
+                                    }
+                                })
+                            })
+                        }
+
                         this.tableData.push({
                             user_id: user_id,
                             user_name: user_name,
                             phone: phone,
                             email: email,
                             department_name: department_name,
-                            // TODO: role_name: role.name,
+                            role_name: role_name,
                         });
                     });
     			}catch(err){
@@ -295,11 +353,22 @@
                             departmentId: this.createForm.department_id,
                         });
 
-                        // TODO: 添加用户-角色绑定
-                        // const user_role_result = await addUserRole({
-                        //     user_id: user_result.id,
-                        //     role_id: this.createForm.role_id,
-                        // });
+                        // 根据用户名字查询用户编号
+                        let users = await getUserList();
+                        users.data.forEach((item, index) => {
+                            if (item.username == this.createForm.user_name) {
+                                user_result.id = item.id;
+                            }
+                        })
+                        console.log(user_result.id)
+
+                        // 添加用户-角色绑定
+                        this.createForm.role_ids.forEach(async (item, index) => {
+                            const user_role_result = await addUserRole({
+                                "userId": user_result.id,
+                                "roleId": item,
+                            });
+                        })
                     } catch(err) {
                         console.log(err.message)
                     }

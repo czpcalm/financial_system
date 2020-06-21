@@ -8,7 +8,7 @@
                         <el-input v-model="createForm.dept_name" auto-complete="off"></el-input>
                     </el-form-item>
                     <el-form-item label="角色选择" label-width="100px">
-                        <el-select v-model="createForm.role_id" placeholder="请选择部门所属的部门">
+                        <el-select multiple collapse-tags v-model="createForm.role_ids" placeholder="请选择部门所属的部门">
                             <el-option
                                 v-for="item in roles"
                                 :key="item.value"
@@ -86,7 +86,7 @@
                         <el-input v-model="updateForm.dept_name" auto-complete="off"></el-input>
                     </el-form-item>
                     <el-form-item label="角色选择" label-width="100px">
-                        <el-select v-model="updateForm.role_id" placeholder="请选择部门所属的部门">
+                        <el-select multiple collapse-tags v-model="updateForm.role_ids" placeholder="请选择部门所属的部门">
                             <el-option
                                 v-for="item in roles"
                                 :key="item.value"
@@ -109,7 +109,7 @@
 <script>
     import headTop from '../components/headTop'
     import {getDeptList, addDept, updateDept, deleteDept} from '@/api/getData'
-    import {getRoleList} from '@/api/getData'
+    import {getRoleList, getRolesByDeptId, addDeptRole} from '@/api/getData'
     export default {
         data(){
             return {
@@ -122,11 +122,11 @@
 
                 createForm: {
                     dept_name: '',
-                    role_id: '',
+                    role_ids: [],
                 },
                 updateForm: {
                     dept_name: '',
-                    role_id: '',
+                    role_ids: [],
                 },
 
                 roles: [],
@@ -159,14 +159,26 @@
                     // 初始化部门信息
                     this.tableData = []
                     const depts = await getDeptList();
-                    depts.data.forEach((item,index)=>{
+                    depts.data.forEach(async (item,index)=>{
                         let dept_id = item.id;
                         let dept_name = item.name;
-                        // TODO: const role = await getDeptRole(dept_id)
+                        let role_name = '';
+
+                        const roles_by_dept_id = await getRolesByDeptId(dept_id);
+                        if (roles_by_dept_id.data.roleIdList.length > 0) {
+                            roles_by_dept_id.data.roleIdList.forEach((it, idx) => {
+                                this.roles.forEach((e, i) => {
+                                    if (e.value == it) {
+                                        role_name += e.label + '; '
+                                    }
+                                })
+                            })
+                        } 
+                        
                         this.tableData.push({
                             dept_id: dept_id,
                             dept_name: dept_name,
-                            // TODO: role_name: role.name,
+                            role_name: role_name,
                         });
                     });
     			}catch(err){
@@ -221,11 +233,21 @@
                             name: this.createForm.dept_name,
                         });
 
-                        // TODO: 添加部门-角色绑定
-                        // const dept_role_result = await addDeptRole({
-                        //     dept_id: user_result.id,
-                        //     role_id: this.createForm.role_id,
-                        // });
+                        // 根据部门名字查询部门编号
+                        let departments = await getDeptList();
+                        departments.data.forEach((item, index) => {
+                            if (item.name == this.createForm.dept_name) {
+                                dept_result.id = item.id;
+                            }
+                        })
+
+                        // 添加部门-角色绑定
+                        this.createForm.role_ids.forEach(async (item, index) => {
+                            const dept_role_result = await addDeptRole({
+                                "departmentId": dept_result.id,
+                                "roleId": item,
+                            });
+                        })
                     } catch(err) {
                         console.log(err.message)
                     }
