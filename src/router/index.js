@@ -13,7 +13,7 @@ const deptList = r => require.ensure([], () => r(require('@/page/deptList')), 'd
 const providerList = r => require.ensure([], () => r(require('@/page/providerList')), 'providerList');
 const productList = r => require.ensure([], () => r(require('@/page/productList')), 'productList');
 const orderList = r => require.ensure([], () => r(require('@/page/orderList')), 'orderList');
-const adminList = r => require.ensure([], () => r(require('@/page/adminList')), 'adminList');
+const roleList = r => require.ensure([], () => r(require('@/page/roleList')), 'roleList');
 const visitor = r => require.ensure([], () => r(require('@/page/visitor')), 'visitor');
 const newMember = r => require.ensure([], () => r(require('@/page/newMember')), 'newMember');
 const uploadImg = r => require.ensure([], () => r(require('@/page/uploadImg')), 'uploadImg');
@@ -42,31 +42,31 @@ const routes = [
 		},{
 			path: '/addProduct',
 			component: addProduct,
-			meta: ['添加数据', '添加商品'],
+			meta: ['添加数据', '添加产品'],
 		},{
 			path: '/userList',
 			component: userList,
-			meta: ['数据管理', '用户列表'],
+			meta: ['系统管理', '用户'],
 		}, {
 			path: '/deptList',
 			component: deptList,
-			meta: ['数据管理', '部门列表'],
+			meta: ['系统管理', '部门'],
 		}, {
+			path: '/roleList',
+			component: roleList,
+			meta: ['系统管理', '角色'],
+		},{
 			path: '/providerList',
 			component: providerList,
-			meta: ['数据管理', '商家列表'],
+			meta: ['产品管理', '供应商列表'],
 		},{
 			path: '/productList',
 			component: productList,
-			meta: ['数据管理', '食品列表'],
+			meta: ['产品管理', '产品列表'],
 		},{
 			path: '/orderList',
 			component: orderList,
-			meta: ['数据管理', '订单列表'],
-		},{
-			path: '/adminList',
-			component: adminList,
-			meta: ['数据管理', '管理员列表'],
+			meta: ['订单管理', '订单列表'],
 		},{
 			path: '/visitor',
 			component: visitor,

@@ -1,16 +1,16 @@
 <template>
     <div class="fillcontain">
         <head-top></head-top>
-        <el-button class="addbtn" type="primary" @click="showAddDept">添加角色</el-button>
-        <el-dialog title="添加部门" v-model="addFormVisible">
-                <el-form :model="deptForm">
+        <el-button class="addbtn" type="primary" @click="showAddRole">添加角色</el-button>
+        <el-dialog title="添加角色" v-model="addFormVisible">
+                <el-form :model="createForm">
                     <el-form-item label="角色名称" label-width="100px">
-                        <el-input v-model="deptForm.name" auto-complete="off"></el-input>
+                        <el-input v-model="createForm.role_name" auto-complete="off"></el-input>
                     </el-form-item>
-                    <el-form-item label="部门操作" label-width="100px">
-                        <el-select v-model="deptForm.role" placeholder="请选择该角色预设的操作">
+                    <el-form-item label="菜单权限" label-width="100px">
+                        <el-select v-model="createForm.operation_id" placeholder="请选择角色允许的操作">
                             <el-option
-                                v-for="item in options"
+                                v-for="item in operations"
                                 :key="item.value"
                                 :label="item.label"
                                 :value="item.value"
@@ -21,15 +21,15 @@
                 </el-form>
               <div slot="footer" class="dialog-footer">
                 <el-button @click="addFormVisible = false">取 消</el-button>
-                <el-button type="primary" @click="addDept()">确 定</el-button>
+                <el-button type="primary" @click="createRole()">确 定</el-button>
               </div>
             </el-dialog>
         <div class="table_container">
             <el-table
                 :data="tableData"
                 style="width: 100%">
-                <el-table-column type="expand">
-                  <!-- <template slot-scope="props">
+                <!-- <el-table-column type="expand">
+                  <template slot-scope="props">
                     <el-form label-position="left" inline class="demo-table-expand">
                       <el-form-item label="供应商id">
                         <span>{{ props.row.provider_id }}</span>
@@ -44,24 +44,20 @@
                         <span>{{ props.row.email }}</span>
                       </el-form-item>
                     </el-form>
-                  </template> -->
-                </el-table-column>
-                <!-- <el-table-column
-                  label="创建时间"
-                  prop="create_time">
+                  </template>
                 </el-table-column> -->
-                <el-table-column
-                  label="角色编号"
-                  prop="dept_id">
-                </el-table-column>
                 <el-table-column
                   label="角色名称"
-                  prop="dept_name">
+                  prop="role_name">
                 </el-table-column>
-                <!-- <el-table-column
-                  label="角色权限"
-                  prop="auth_role">
-                </el-table-column> -->
+                <el-table-column
+                  label="角色编号"
+                  prop="role_id">
+                </el-table-column>
+                <el-table-column
+                  label="允许操作"
+                  prop="operation_name">
+                </el-table-column>
                 <el-table-column label="操作" width="200">
                   <template slot-scope="scope">
                     <el-button
@@ -85,14 +81,14 @@
                 </el-pagination>
             </div>
             <el-dialog title="修改角色" v-model="dialogFormVisible">
-                <el-form :model="selectDept">
+                <el-form :model="updateForm">
                     <el-form-item label="角色名称" label-width="100px">
-                        <el-input v-model="selectDept.name" auto-complete="off"></el-input>
+                        <el-input v-model="updateForm.role_name" auto-complete="off"></el-input>
                     </el-form-item>
-                    <el-form-item label="角色操作" label-width="100px">
-                        <el-select v-model="selectDept.role" placeholder="请选择该部门预设的操作">
+                    <el-form-item label="菜单权限" label-width="100px">
+                        <el-select v-model="updateForm.operation_id" placeholder="请选择角色允许的操作">
                             <el-option
-                                v-for="item in options"
+                                v-for="item in operations"
                                 :key="item.value"
                                 :label="item.label"
                                 :value="item.value"
@@ -103,7 +99,7 @@
                 </el-form>
                 <div slot="footer" class="dialog-footer">
                     <el-button @click="dialogFormVisible = false">取 消</el-button>
-                    <el-button type="primary" @click="updateDept">确 定</el-button>
+                    <el-button type="primary" @click="updateRole()">确 定</el-button>
                 </div>
             </el-dialog>
         </div>
@@ -112,35 +108,33 @@
 
 <script>
     import headTop from '../components/headTop'
-    import {getRoleList, addRole, updateRole, deleteRole, addDeptRole} from '@/api/getData'
+    import {getRoleList, addRole, updateRole, deleteRole} from '@/api/getData'
+    import {getOperationList} from '@/api/getData'
     export default {
         data(){
             return {
                 offset: 0,
                 limit: 20,
                 count: 0,
-                tableData: [],
                 currentPage: 1,
-                deptForm: {
-                    name: '',
-                    role: '',
+
+                tableData: [],
+
+                createForm: {
+                    role_name: '',
+                    operation_id: '',
                 },
-                options: [ // TODO: 获取角色列表
-                    { 
-                        value: '1',
-                        label: 'Read-Only',
-                    }, 
-                    {
-                        value: '2',
-                        label: 'Read / Write',
-                    }
-                ],
-                selectDept: {
-                    name: '',
-                    role: '',
+                updateForm: {
+                    role_name: '',
+                    operation_id: '',
                 },
+
+                operations: [],
+                
                 dialogFormVisible: false,
                 addFormVisible:false,
+
+                user_auth: '',
             }
         },
         created(){
@@ -152,36 +146,54 @@
         methods: {
             async initData(){
     			try{
-                    const depts = await getRoleList();
-                    depts.forEach((item,index)=>{
+                    // 初始化菜单权限
+                    this.operations = []
+                    const operations = await getOperationList();
+                    operations.data.forEach((item, index) => {
+                        this.operations.push({
+                            value: item.id,
+                            label: item.name,
+                        });
+                    });
+
+                    // 初始化角色信息
+                    this.tableData = []
+                    const roles = await getRoleList();
+                    roles.data.forEach((item,index)=>{
+                        let role_id = item.id;
+                        let role_name = item.name;
+                        // TODO: const operation = await getRoleOperation(role_id)
                         this.tableData.push({
-                            create_time:item.createTime,
-                            dept_id:item.id,
-                            dept_name:item.name,
-                            // auth_role:
+                            role_id: role_id,
+                            role_name: role_name,
+                            // TODO: operation_name: operation.name,
                         });
                     });
     			}catch(err){
-    				console.log(err)
+    				console.log(err.message)
     			}
-    		},
+            },
+            showAddRole(){
+                this.addFormVisible=true;
+            },
             handleSizeChange(val) {
                 console.log(`每页 ${val} 条`);
             },
             handleCurrentChange(val) {
                 this.currentPage = val;
                 this.offset = (val - 1)*this.limit;
-                this.getResturants()
             },
             handleEdit(index, row) {
-                this.selectDept = row;
+                this.updateForm = row;
                 this.dialogFormVisible = true;
             },
             async handleDelete(index, row) {
                 try{
-                    // TODO: 删除该部门的用户
                     try {
-                        const res = await deleteRole(row.dept_id);
+                        // const user_res = await deleteUsers(row.role_id);
+                        // const dept_res = await deleteDepts(row.role_id);
+                        // const operation_res = await deleteOperations(row.role_id);
+                        const role_res = await deleteRole({"id": row.role_id});
                     } catch(err) {
                         console.log(err.message)
                     }
@@ -189,9 +201,9 @@
                     // if (res.status == 1) {
                         this.$message({
                             type: 'success',
-                            message: '删除部门成功'
+                            message: '删除角色成功'
                         });
-                        this.tableData.splice(index, 1);
+                        location.reload();
                     // }else{
                     //     throw new Error(res.message)
                     // }
@@ -200,18 +212,25 @@
                         type: 'error',
                         message: err.message
                     });
-                    console.log('删除部门失败')
+                    console.log('删除角色失败')
                 }
             },
-            showAddDept(){
-                this.addFormVisible=true;
-            },
-            async addDept(){
+            async createRole(){
+                this.dialogFormVisible = false;
                 try{
                     try {
-                        const res = await addRole({"name":this.deptForm.name});
-                        // TODO: 插入角色权限
-                        // addDeptRole(this.deptForm.id, this.deptForm.role)
+                        // 添加角色
+                        const role_result = await addRole({
+                            name: this.createForm.role_name,
+                        });
+
+                        // TODO: 添加角色-菜单绑定
+                        // const role_operation_result = await addRoleOperation({
+                        //     role_id: role_result.id,
+                        //     operation_id: this.createForm.operation_id,
+                        // });
+
+                        // TODO: 添加角色-数据绑定
                     } catch(err) {
                         console.log(err.message)
                     }
@@ -219,32 +238,37 @@
                     // if (res.status == 1) {
                         this.$message({
                             type: 'success',
-                            message: '添加部门成功'
+                            message: '添加角色成功'
                         });
                         location.reload()
                     // }else{
-                    //     throw new Error(res.message)
+                    //      throw new Error(res.message)
                     // }
                 }catch(err){
                     this.$message({
                         type: 'error',
                         message: err.message
                     });
-                    console.log('添加部门失败')
+                    console.log('添加角色失败')
                 }
             },
-            async updateDept(){
+            async updateRole(){
                 this.dialogFormVisible = false;
                 try{
-                     try {
-                        var put_data = {
-                            "id": this.selectDept.dept_id, 
-                            "name": this.selectDept.name,
+                    try {
+                        // 更新角色
+                        var role_data = {
+                            "id": this.updateForm.role_id, 
+                            "name": this.updateForm.role_name,
                         }
-                        const res = await updateRole(put_data)
-                        console.log(res)
-                        // TODO: 更新角色权限
-                        // updateDeptRole(this.deptForm.id, this.deptForm.role)
+                        const role_res = await updateRole(role_data)
+                        
+                        // // 更新角色-操作绑定
+                        // var role_operation_data = {
+                        //     "role_id": this.updateForm.role_id,
+                        //     "operation_id": this.updateForm.operation_id
+                        // }
+                        // const role_operation_res = await updateRoleOperation(role_operation_data)
                     } catch(err) {
                         console.log(err.message)
                     }
@@ -252,7 +276,7 @@
                     // if (result.status == 1) {
                         this.$message({
                             type: 'success',
-                            message: '更新部门成功'
+                            message: '更新角色成功'
                         });
                         location.reload()
                     // }else{
@@ -261,8 +285,9 @@
                 }catch(err){
                     this.$message({
                         type: 'error',
-                        message: res.message
+                        message: err.message
                     });
+                    console.log('更新角色失败')
                 }
             },
         },

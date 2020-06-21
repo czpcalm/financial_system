@@ -3,14 +3,14 @@
         <head-top></head-top>
         <el-button class="addbtn" type="primary" @click="showAddDept">添加部门</el-button>
         <el-dialog title="添加部门" v-model="addFormVisible">
-                <el-form :model="deptForm">
+                <el-form :model="createForm">
                     <el-form-item label="部门名称" label-width="100px">
-                        <el-input v-model="deptForm.name" auto-complete="off"></el-input>
+                        <el-input v-model="createForm.dept_name" auto-complete="off"></el-input>
                     </el-form-item>
-                    <el-form-item label="部门权限" label-width="100px">
-                        <el-select v-model="deptForm.role" placeholder="请选择该部门预设的角色">
+                    <el-form-item label="角色选择" label-width="100px">
+                        <el-select v-model="createForm.role_id" placeholder="请选择部门所属的部门">
                             <el-option
-                                v-for="item in options"
+                                v-for="item in roles"
                                 :key="item.value"
                                 :label="item.label"
                                 :value="item.value"
@@ -21,47 +21,43 @@
                 </el-form>
               <div slot="footer" class="dialog-footer">
                 <el-button @click="addFormVisible = false">取 消</el-button>
-                <el-button type="primary" @click="addDept()">确 定</el-button>
+                <el-button type="primary" @click="createDept()">确 定</el-button>
               </div>
             </el-dialog>
         <div class="table_container">
             <el-table
                 :data="tableData"
                 style="width: 100%">
-                <el-table-column type="expand">
-                  <!-- <template slot-scope="props">
+                <!-- <el-table-column type="expand">
+                  <template slot-scope="props">
                     <el-form label-position="left" inline class="demo-table-expand">
-                      <el-form-item label="供应商id">
-                        <span>{{ props.row.provider_id }}</span>
+                      <el-form-item label="角色">
+                        <span>{{ props.row.role_name }}</span>
                       </el-form-item>
-                      <el-form-item label="供应商名称">
-                        <span>{{ props.row.name }}</span>
+                      <el-form-item label="部门">
+                        <span>{{ props.row.department_name }}</span>
                       </el-form-item>
-                      <el-form-item label="电话">
+                      <el-form-item label="手机">
                         <span>{{ props.row.phone }}</span>
                       </el-form-item>
                       <el-form-item label="邮箱">
                         <span>{{ props.row.email }}</span>
                       </el-form-item>
                     </el-form>
-                  </template> -->
-                </el-table-column>
-                <!-- <el-table-column
-                  label="创建时间"
-                  prop="create_time">
+                  </template>
                 </el-table-column> -->
+                <el-table-column
+                  label="部门名称"
+                  prop="dept_name">
+                </el-table-column>
                 <el-table-column
                   label="部门编号"
                   prop="dept_id">
                 </el-table-column>
                 <el-table-column
-                  label="部门名称"
-                  prop="dept_name">
+                  label="所属角色"
+                  prop="role_name">
                 </el-table-column>
-                <!-- <el-table-column
-                  label="角色权限"
-                  prop="auth_role">
-                </el-table-column> -->
                 <el-table-column label="操作" width="200">
                   <template slot-scope="scope">
                     <el-button
@@ -85,14 +81,14 @@
                 </el-pagination>
             </div>
             <el-dialog title="修改部门" v-model="dialogFormVisible">
-                <el-form :model="selectDept">
+                <el-form :model="updateForm">
                     <el-form-item label="部门名称" label-width="100px">
-                        <el-input v-model="selectDept.name" auto-complete="off"></el-input>
+                        <el-input v-model="updateForm.dept_name" auto-complete="off"></el-input>
                     </el-form-item>
-                    <el-form-item label="部门权限" label-width="100px">
-                        <el-select v-model="selectDept.role" placeholder="请选择该部门预设的角色">
+                    <el-form-item label="角色选择" label-width="100px">
+                        <el-select v-model="updateForm.role_id" placeholder="请选择部门所属的部门">
                             <el-option
-                                v-for="item in options"
+                                v-for="item in roles"
                                 :key="item.value"
                                 :label="item.label"
                                 :value="item.value"
@@ -103,7 +99,7 @@
                 </el-form>
                 <div slot="footer" class="dialog-footer">
                     <el-button @click="dialogFormVisible = false">取 消</el-button>
-                    <el-button type="primary" @click="updateDept">确 定</el-button>
+                    <el-button type="primary" @click="updateDept()">确 定</el-button>
                 </div>
             </el-dialog>
         </div>
@@ -112,35 +108,33 @@
 
 <script>
     import headTop from '../components/headTop'
-    import {getDeptList, addDepartment, updateDepartment, deleteDepartment, addDeptRole} from '@/api/getData'
+    import {getDeptList, addDept, updateDept, deleteDept} from '@/api/getData'
+    import {getRoleList} from '@/api/getData'
     export default {
         data(){
             return {
                 offset: 0,
                 limit: 20,
                 count: 0,
-                tableData: [],
                 currentPage: 1,
-                deptForm: {
-                    name: '',
-                    role: '',
+
+                tableData: [],
+
+                createForm: {
+                    dept_name: '',
+                    role_id: '',
                 },
-                options: [ // TODO: 获取角色列表
-                    { 
-                        value: '1',
-                        label: 'administrator',
-                    }, 
-                    {
-                        value: '2',
-                        label: 'general_user',
-                    }
-                ],
-                selectDept: {
-                    name: '',
-                    role: '',
+                updateForm: {
+                    dept_name: '',
+                    role_id: '',
                 },
+
+                roles: [],
+                
                 dialogFormVisible: false,
                 addFormVisible:false,
+
+                user_auth: '',
             }
         },
         created(){
@@ -152,36 +146,51 @@
         methods: {
             async initData(){
     			try{
+                    // 初始化角色信息
+                    this.roles = []
+                    const roles = await getRoleList();
+                    roles.data.forEach((item, index) => {
+                        this.roles.push({
+                            value: item.id,
+                            label: item.name,
+                        });
+                    });
+
+                    // 初始化部门信息
+                    this.tableData = []
                     const depts = await getDeptList();
-                    depts.forEach((item,index)=>{
+                    depts.data.forEach((item,index)=>{
+                        let dept_id = item.id;
+                        let dept_name = item.name;
+                        // TODO: const role = await getDeptRole(dept_id)
                         this.tableData.push({
-                            create_time:item.createTime,
-                            dept_id:item.id,
-                            dept_name:item.name,
-                            // auth_role:
+                            dept_id: dept_id,
+                            dept_name: dept_name,
+                            // TODO: role_name: role.name,
                         });
                     });
     			}catch(err){
-    				console.log(err)
+    				console.log(err.message)
     			}
-    		},
+            },
+            showAddDept(){
+                this.addFormVisible=true;
+            },
             handleSizeChange(val) {
                 console.log(`每页 ${val} 条`);
             },
             handleCurrentChange(val) {
                 this.currentPage = val;
                 this.offset = (val - 1)*this.limit;
-                this.getResturants()
             },
             handleEdit(index, row) {
-                this.selectDept = row;
+                this.updateForm = row;
                 this.dialogFormVisible = true;
             },
             async handleDelete(index, row) {
                 try{
-                    // TODO: 删除该部门的用户
                     try {
-                        const res = await deleteDepartment(row.dept_id);
+                        const dept_res = await deleteDept({"id": row.dept_id});
                     } catch(err) {
                         console.log(err.message)
                     }
@@ -191,7 +200,7 @@
                             type: 'success',
                             message: '删除部门成功'
                         });
-                        this.tableData.splice(index, 1);
+                        location.reload();
                     // }else{
                     //     throw new Error(res.message)
                     // }
@@ -203,15 +212,20 @@
                     console.log('删除部门失败')
                 }
             },
-            showAddDept(){
-                this.addFormVisible=true;
-            },
-            async addDept(){
+            async createDept(){
+                this.dialogFormVisible = false;
                 try{
                     try {
-                        const res = await addDepartment(this.deptForm.name);
-                        // TODO: 插入角色权限
-                        // addDeptRole(this.deptForm.id, this.deptForm.role)
+                        // 添加部门
+                        const dept_result = await addDept({
+                            name: this.createForm.dept_name,
+                        });
+
+                        // TODO: 添加部门-角色绑定
+                        // const dept_role_result = await addDeptRole({
+                        //     dept_id: user_result.id,
+                        //     role_id: this.createForm.role_id,
+                        // });
                     } catch(err) {
                         console.log(err.message)
                     }
@@ -223,7 +237,7 @@
                         });
                         location.reload()
                     // }else{
-                    //     throw new Error(res.message)
+                    //      throw new Error(res.message)
                     // }
                 }catch(err){
                     this.$message({
@@ -236,10 +250,18 @@
             async updateDept(){
                 this.dialogFormVisible = false;
                 try{
-                     try {
-                        const res = await updateDepartment(this.selectDept.dept_id, this.selectDept.name)
-                        // TODO: 更新角色权限
-                        // updateDeptRole(this.deptForm.id, this.deptForm.role)
+                    try {
+                        // 更新部门
+                        const dep_result = await updateDept({
+                            id: this.updateForm.dept_id,
+                            name: this.updateForm.dept_name,
+                        });
+
+                        // TODO: 更新部门-角色绑定
+                        // const dept_role_result = await updateDeptRole({
+                        //     dept_id: user_result.id,
+                        //     role_id: this.udpateForm.role_id,
+                        // });
                     } catch(err) {
                         console.log(err.message)
                     }
@@ -256,8 +278,9 @@
                 }catch(err){
                     this.$message({
                         type: 'error',
-                        message: res.message
+                        message: err.message
                     });
+                    console.log('更新部门失败')
                 }
             },
         },

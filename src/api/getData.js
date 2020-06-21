@@ -21,18 +21,6 @@ export const adminList = () => fetch('/roleUser/selectAll');
 //获取管理员数量
 export const adminCount = () => fetch('/role/countName');
 
-//获取用户列表
-export const getUserList = () => fetch('/user/selectAll');
-
-//增加某个用户
-export const addUser = data => fetch('/user/insertSelective', data, "POST");
-
-//修改某个用户
-export const updateUser = data => fetch('/user/update?id='+data.id+'&username='+data.username+"&password="+data.password+"&email="+data.email+"&phone="+data.phone, {}, "PUT");
-
-//删除某个用户
-export const deleteUser = id => fetch('/user/delete?id='+id, {}, "DELETE");
-
 //获取用户数量
 export const getUserCount = () => fetch('/user/count');
 
@@ -42,26 +30,29 @@ export const getOrderList = () => fetch('/order/selectAll');
 //获取订单数量
 export const getOrderCount = () => fetch('/order/count');
 
+//获取用户列表
+export const getUserList = () => fetch('/user/selectAll');
+
+//增加某个用户
+export const addUser = data => fetch('/user/insertSelective', data, "POST");
+
+//修改某个用户
+export const updateUser = data => fetch('/user/update', data, "PUT");
+
+//删除某个用户
+export const deleteUser = data => fetch('/user/delete?id='+data.id, {}, "DELETE");
+
 //获取部门列表
 export const getDeptList = () => fetch('/department/selectAll');
 
 //增加某个部门
-export const addDepartment = name => fetch('/department/insertSelective', {name: name}, "POST");
+export const addDept = data => fetch('/department/insertSelective', data, "POST");
 
 //修改某个部门
-export const updateDepartment = (id, name) => fetch('/department/update?id='+id+'&name='+name, {}, "PUT");
+export const updateDept = data => fetch('/department/update', data, "PUT");
 
 //删除某个部门
-export const deleteDepartment = id => fetch('/department/delete?id='+id, {}, "DELETE");
-
-//增加部门权限
-export const addDeptRole = (dept_id, role_id) => fetch('/roleDepartment/insertSelective?department_id='+dept_id+"&role_id="+role_id, {}, 'POST');
-
-//修改部门权限
-export const updateDeptRole = (dept_id, role_id) => fetch('/roleDepartment/update?department_id='+dept_id+"&role_id="+role_id, {}, 'PUT');
-
-//获取部门权限
-export const getDeptRole = id => fetch('/roleDepartment/selectOne', id);
+export const deleteDept = data => fetch('/department/delete?id='+data.id, {}, "DELETE");
 
 //获取角色列表
 export const getRoleList = () => fetch('/role/selectAll');
@@ -70,7 +61,10 @@ export const getRoleList = () => fetch('/role/selectAll');
 export const addRole = data => fetch('/role/insertSelective', data, "POST");
 
 //修改某个角色
-export const updateRole = data => fetch('/role/update?id='+data.id+'&name='+data.name, {}, "PUT");
+export const updateRole = data => fetch('/role/update', data, 'POST');
 
 //删除某个角色
-export const deleteRole = id => fetch('/role/delete?id='+id, {}, "DELETE");
+export const deleteRole = data => fetch('/role/delete?id='+data.id, {}, "DELETE");
+
+//获取操作列表
+export const getOperationList = () => fetch('/operation/selectAll');

@@ -1,25 +1,36 @@
 <template>
     <div class="fillcontain">
         <head-top></head-top>
-        <el-button class="addbtn" type="primary" @click="showAddDept">添加用户</el-button>
+        <el-button class="addbtn" type="primary" @click="showAddUser">添加用户</el-button>
         <el-dialog title="添加用户" v-model="addFormVisible">
-                <el-form :model="deptForm">
+                <el-form :model="createForm">
                     <el-form-item label="用户名称" label-width="100px">
-                        <el-input v-model="deptForm.name" auto-complete="off"></el-input>
+                        <el-input v-model="createForm.user_name" auto-complete="off"></el-input>
                     </el-form-item>
                     <el-form-item label="用户密码" label-width="100px">
-                        <el-input type="password" v-model="deptForm.pwd" auto-complete="off"></el-input>
+                        <el-input type="password" v-model="createForm.password" auto-complete="off"></el-input>
                     </el-form-item>
-                    <el-form-item label="电话" label-width="100px">
-                        <el-input v-model="deptForm.phone" auto-complete="off"></el-input>
+                    <el-form-item label="用户电话" label-width="100px">
+                        <el-input v-model="createForm.phone" auto-complete="off"></el-input>
                     </el-form-item>
-                    <el-form-item label="邮箱" label-width="100px">
-                        <el-input v-model="deptForm.email" auto-complete="off"></el-input>
+                    <el-form-item label="用户邮箱" label-width="100px">
+                        <el-input v-model="createForm.email" auto-complete="off"></el-input>
                     </el-form-item>
-                    <el-form-item label="用户权限" label-width="100px">
-                        <el-select v-model="deptForm.role" placeholder="请选择该用户预设的角色">
+                    <el-form-item label="部门选择" label-width="100px">
+                        <el-select v-model="createForm.department_id" placeholder="请选择用户所属的用户">
                             <el-option
-                                v-for="item in options"
+                                v-for="item in departments"
+                                :key="item.value"
+                                :label="item.label"
+                                :value="item.value"
+                                :disabled="item.disabled">
+                            </el-option>
+                        </el-select>
+                    </el-form-item>
+                    <el-form-item label="角色选择" label-width="100px">
+                        <el-select v-model="createForm.role_id" placeholder="请选择用户所属的用户">
+                            <el-option
+                                v-for="item in roles"
                                 :key="item.value"
                                 :label="item.label"
                                 :value="item.value"
@@ -30,7 +41,7 @@
                 </el-form>
               <div slot="footer" class="dialog-footer">
                 <el-button @click="addFormVisible = false">取 消</el-button>
-                <el-button type="primary" @click="addDept()">确 定</el-button>
+                <el-button type="primary" @click="createUser()">确 定</el-button>
               </div>
             </el-dialog>
         <div class="table_container">
@@ -38,47 +49,35 @@
                 :data="tableData"
                 style="width: 100%">
                 <el-table-column type="expand">
-                  <!-- <template slot-scope="props">
+                  <template slot-scope="props">
                     <el-form label-position="left" inline class="demo-table-expand">
-                      <el-form-item label="供应商id">
-                        <span>{{ props.row.provider_id }}</span>
+                      <el-form-item label="角色">
+                        <span>{{ props.row.role_name }}</span>
                       </el-form-item>
-                      <el-form-item label="供应商名称">
-                        <span>{{ props.row.name }}</span>
+                      <el-form-item label="部门">
+                        <span>{{ props.row.department_name }}</span>
                       </el-form-item>
-                      <el-form-item label="电话">
+                      <el-form-item label="手机">
                         <span>{{ props.row.phone }}</span>
                       </el-form-item>
                       <el-form-item label="邮箱">
                         <span>{{ props.row.email }}</span>
                       </el-form-item>
                     </el-form>
-                  </template> -->
-                </el-table-column>
-                <!-- <el-table-column
-                  label="创建时间"
-                  prop="create_time">
-                </el-table-column> -->
-                <el-table-column
-                  label="用户编号"
-                  prop="dept_id">
+                  </template>
                 </el-table-column>
                 <el-table-column
                   label="用户名称"
-                  prop="dept_name">
+                  prop="user_name">
                 </el-table-column>
                 <el-table-column
-                  label="电话"
-                  prop="phone">
+                  label="用户编号"
+                  prop="user_id">
                 </el-table-column>
                 <el-table-column
-                  label="邮箱"
-                  prop="email">
+                  label="所属角色"
+                  prop="role_name">
                 </el-table-column>
-                <!-- <el-table-column
-                  label="角色权限"
-                  prop="auth_role">
-                </el-table-column> -->
                 <el-table-column label="操作" width="200">
                   <template slot-scope="scope">
                     <el-button
@@ -102,23 +101,34 @@
                 </el-pagination>
             </div>
             <el-dialog title="修改用户" v-model="dialogFormVisible">
-                <el-form :model="selectDept">
+                <el-form :model="updateForm">
                     <el-form-item label="用户名称" label-width="100px">
-                        <el-input v-model="selectDept.name" auto-complete="off"></el-input>
+                        <el-input v-model="updateForm.user_name" auto-complete="off"></el-input>
                     </el-form-item>
                     <el-form-item label="用户密码" label-width="100px">
-                        <el-input v-model="selectDept.pwd" auto-complete="off"></el-input>
+                        <el-input type="password" v-model="updateForm.password" auto-complete="off"></el-input>
                     </el-form-item>
-                    <el-form-item label="电话" label-width="100px">
-                        <el-input v-model="selectDept.phone" auto-complete="off"></el-input>
+                    <el-form-item label="用户电话" label-width="100px">
+                        <el-input v-model="updateForm.phone" auto-complete="off"></el-input>
                     </el-form-item>
-                    <el-form-item label="邮箱" label-width="100px">
-                        <el-input v-model="selectDept.email" auto-complete="off"></el-input>
+                    <el-form-item label="用户邮箱" label-width="100px">
+                        <el-input v-model="updateForm.email" auto-complete="off"></el-input>
                     </el-form-item>
-                    <el-form-item label="用户权限" label-width="100px">
-                        <el-select v-model="selectDept.role" placeholder="请选择该用户预设的角色">
+                    <el-form-item label="部门选择" label-width="100px">
+                        <el-select v-model="updateForm.department_id" placeholder="请选择用户所属的用户">
                             <el-option
-                                v-for="item in options"
+                                v-for="item in departments"
+                                :key="item.value"
+                                :label="item.label"
+                                :value="item.value"
+                                :disabled="item.disabled">
+                            </el-option>
+                        </el-select>
+                    </el-form-item>
+                    <el-form-item label="角色选择" label-width="100px">
+                        <el-select v-model="updateForm.role_id" placeholder="请选择用户所属的用户">
+                            <el-option
+                                v-for="item in roles"
                                 :key="item.value"
                                 :label="item.label"
                                 :value="item.value"
@@ -129,7 +139,7 @@
                 </el-form>
                 <div slot="footer" class="dialog-footer">
                     <el-button @click="dialogFormVisible = false">取 消</el-button>
-                    <el-button type="primary" @click="updateDept">确 定</el-button>
+                    <el-button type="primary" @click="updateUser()">确 定</el-button>
                 </div>
             </el-dialog>
         </div>
@@ -138,39 +148,42 @@
 
 <script>
     import headTop from '../components/headTop'
-    import {getUserList, addUser, updateUser, deleteUser, addDeptRole} from '@/api/getData'
+    import {getUserList, addUser, updateUser, deleteUser} from '@/api/getData'
+    import {getDeptList, getRoleList} from '@/api/getData'
     export default {
         data(){
             return {
                 offset: 0,
                 limit: 20,
                 count: 0,
-                tableData: [],
                 currentPage: 1,
-                deptForm: {
-                    name: '',
-                    role: '',
-                    pwd: '',
+
+                tableData: [],
+
+                createForm: {
+                    user_name: '',
+                    password: '',
                     phone: '',
                     email: '',
+                    department_id: '',
+                    role_id: '',
                 },
-                options: [ // TODO: 获取角色列表
-                    { 
-                        value: '1',
-                        label: 'administrator',
-                    }, 
-                    {
-                        value: '2',
-                        label: 'general_user',
-                    }
-                ],
-                selectDept: {
-                    name: '',
-                    role: '',
-                    pwd: '',
+                updateForm: {
+                    user_name: '',
+                    password: '',
+                    phone: '',
+                    email: '',
+                    department_id: '',
+                    role_id: '',
                 },
+
+                departments: [],
+                roles: [],
+                
                 dialogFormVisible: false,
                 addFormVisible:false,
+
+                user_auth: '',
             }
         },
         created(){
@@ -182,38 +195,72 @@
         methods: {
             async initData(){
     			try{
-                    const depts = await getUserList();
-                    depts.forEach((item,index)=>{
+                    // 初始化角色信息
+                    this.roles = []
+                    const roles = await getRoleList();
+                    roles.data.forEach((item, index) => {
+                        this.roles.push({
+                            value: item.id,
+                            label: item.name,
+                        });
+                    });
+
+                    // 初始化部门信息
+                    this.departments = []
+                    const departments = await getDeptList();
+                    departments.data.forEach((item, index) => {
+                        this.departments.push({
+                            value: item.id,
+                            label: item.name,
+                        });
+                    });
+
+                    // 初始化用户信息
+                    this.tableData = []
+                    const users = await getUserList();
+                    users.data.forEach((item,index)=>{
+                        let user_id = item.id;
+                        let user_name = item.username;
+                        let phone = item.phone;
+                        let email = item.email;
+                        let department_name;
+                        this.departments.forEach((it, idx) => {
+                            if (it.value == item.departmentId) {
+                                department_name = it.label
+                            }
+                        })
+                        // TODO: const role = await getUserRole(user_id)
                         this.tableData.push({
-                            create_time:item.createTime,
-                            dept_id:item.id,
-                            dept_name:item.username,
-                            phone:item.phone,
-                            email:item.email,
-                            // auth_role:
+                            user_id: user_id,
+                            user_name: user_name,
+                            phone: phone,
+                            email: email,
+                            department_name: department_name,
+                            // TODO: role_name: role.name,
                         });
                     });
     			}catch(err){
-    				console.log(err)
+    				console.log(err.message)
     			}
-    		},
+            },
+            showAddUser(){
+                this.addFormVisible=true;
+            },
             handleSizeChange(val) {
                 console.log(`每页 ${val} 条`);
             },
             handleCurrentChange(val) {
                 this.currentPage = val;
                 this.offset = (val - 1)*this.limit;
-                this.getResturants()
             },
             handleEdit(index, row) {
-                this.selectDept = row;
+                this.updateForm = row;
                 this.dialogFormVisible = true;
             },
             async handleDelete(index, row) {
                 try{
-                    // TODO: 删除该部门的用户
                     try {
-                        const res = await deleteUser(row.dept_id);
+                        const user_res = await deleteUser({"id": row.user_id});
                     } catch(err) {
                         console.log(err.message)
                     }
@@ -223,7 +270,7 @@
                             type: 'success',
                             message: '删除用户成功'
                         });
-                        this.tableData.splice(index, 1);
+                        location.reload();
                     // }else{
                     //     throw new Error(res.message)
                     // }
@@ -235,21 +282,24 @@
                     console.log('删除用户失败')
                 }
             },
-            showAddDept(){
-                this.addFormVisible=true;
-            },
-            async addDept(){
+            async createUser(){
+                this.dialogFormVisible = false;
                 try{
                     try {
-                        var post_data = {
-                            "username": this.deptForm.name,
-                            "password": this.deptForm.pwd,
-                            "email": this.deptForm.email,
-                            "phone": this.deptForm.phone,
-                        }
-                        const res = await addUser(post_data);
-                        // TODO: 插入角色权限
-                        // addDeptRole(this.deptForm.id, this.deptForm.role)
+                        // 添加用户
+                        const user_result = await addUser({
+                            username: this.createForm.user_name,
+                            password: this.createForm.password,
+                            phone: this.createForm.phone,
+                            email: this.createForm.email,
+                            departmentId: this.createForm.department_id,
+                        });
+
+                        // TODO: 添加用户-角色绑定
+                        // const user_role_result = await addUserRole({
+                        //     user_id: user_result.id,
+                        //     role_id: this.createForm.role_id,
+                        // });
                     } catch(err) {
                         console.log(err.message)
                     }
@@ -261,7 +311,7 @@
                         });
                         location.reload()
                     // }else{
-                    //     throw new Error(res.message)
+                    //      throw new Error(res.message)
                     // }
                 }catch(err){
                     this.$message({
@@ -271,20 +321,25 @@
                     console.log('添加用户失败')
                 }
             },
-            async updateDept(){
+            async updateUser(){
                 this.dialogFormVisible = false;
                 try{
-                     try {
-                         var put_data = {
-                            "id": this.selectDept.dept_id,
-                            "username": this.selectDept.name,
-                            "password": this.selectDept.pwd,
-                            "email": this.selectDept.email,
-                            "phone": this.selectDept.phone,
-                        }
-                        const res = await updateUser(put_data)
-                        // TODO: 更新角色权限
-                        // updateDeptRole(this.deptForm.id, this.deptForm.role)
+                    try {
+                        // 更新用户
+                        const user_result = await updateUser({
+                            id: this.updateForm.user_id,
+                            username: this.updateForm.user_name,
+                            password: this.updateForm.password,
+                            phone: this.updateForm.phone,
+                            email: this.updateForm.email,
+                            departmentId: this.updateForm.department_id,
+                        });
+
+                        // TODO: 更新用户-角色绑定
+                        // const user_role_result = await updateUserRole({
+                        //     user_id: user_result.id,
+                        //     role_id: this.udpateForm.role_id,
+                        // });
                     } catch(err) {
                         console.log(err.message)
                     }
@@ -301,7 +356,7 @@
                 }catch(err){
                     this.$message({
                         type: 'error',
-                        message: res.message
+                        message: err.message
                     });
                     console.log('更新用户失败')
                 }

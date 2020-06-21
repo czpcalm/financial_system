@@ -28,18 +28,21 @@ export default async(url = '', data = {}, type = 'GET', method = 'fetch') => {
 			cache: "force-cache"
 		}
 
-		if (type == 'POST') {/*
+		if (type == 'POST' || type == 'PUT') {/*
 			Object.defineProperty(requestConfig, 'body', {
 				value: JSON.stringify(data)
 			})
 			//console.log(data);
 			console.log(JSON.stringify(data));*/
 			let dataStr = ''; //数据拼接字符串
-		Object.keys(data).forEach(key => {
-			dataStr += key + '=' + data[key] + '&';
-		})
-		dataStr = dataStr.substr(0, dataStr.lastIndexOf('&'));
-		url = url + '?' + dataStr;
+			Object.keys(data).forEach(key => {
+				if (data[key] != '' && typeof(data[key]) != 'undefined' ) {
+					dataStr += key + '=' + data[key] + '&';
+				}
+			})
+			dataStr = dataStr.substr(0, dataStr.lastIndexOf('&'));
+			url = url + '?' + dataStr;
+			console.log(dataStr)
 		}
 		
 		try {
