@@ -207,7 +207,6 @@
                     })
 
                     const operations = await getOperationsByUserId(user_id);
-                    console.log(operations)
                     operations.data.forEach((item, index) => {
                         switch (item.id) {
                             case OPERATION.ADMIN:

@@ -116,6 +116,7 @@
         'DEPT_WRITE': '部门(写)',
         'ROLE_READ': '角色(读)',
         'ROLE_WRITE': '角色(写)',
+        'ORDER_READ': '订单(读)',
     }
 
     import headTop from '../components/headTop'

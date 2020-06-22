@@ -9,6 +9,7 @@ export const OPERATION = {
   'DEPT_WRITE': 6,
   'ROLE_READ': 7,
   'ROLE_WRITE': 8,
+  'ORDER_READ': 9,
 }
 
 //获取所有产品信息
@@ -116,42 +117,5 @@ export const getRolesByDeptId = id => fetch('/department/selectRoleIdListByDepar
 //根据用户获取操作
 export const getOperationsByUserId = id => fetch('/operation/selectByUserId?userId='+id);
 
-// 鉴权操作
-export const Authorization = async (username) => {  
-  let user_id = '';
-  let dept_id = '';
-  let roles = [];
-  let operations = {};
-
-  // 获取用户对应角色
-  const users = await getUserList();
-  users.data.forEach((item, index) => {
-      if (item.username == username) {
-          user_id = item.id;
-      }
-  })
-  if (typeof(user_id) != 'undefined') {
-    const roles_by_user_id = await getRolesByUserId(user_id);
-    roles.push(...roles_by_user_id.data.userIdList);
-  }
-
-  // 获取部门对应角色
-  const user = await getUser(user_id);
-  dept_id = user.department;
-  if (typeof(dept_id) != 'undefined') {
-    const roles_by_dept_id = await getRolesByDeptId(dept_id);
-    roles.push(...roles_by_dept_id.data.roleIdList);
-  }
-
-  // 获取角色对应操作
-  roles.forEach(async (role_id, index) => {
-    const operations_by_role_id = await getOperationsByRoleId(role_id);
-    if (operations_by_role_id.data.operationIdList.length > 0) {
-        operations_by_role_id.data.operationIdList.forEach((it, idx) => {
-          operations[it] = true;
-        })
-    } 
-  })
-  
-  return operations;
-}
+//获取单个订单评价
+export const getOrderComment = id => fetch('/orderComment/selectOne?id='+id);
