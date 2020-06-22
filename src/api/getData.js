@@ -1,21 +1,14 @@
 import fetch from '@/config/fetch'
 
 export const OPERATION = {
-  'SUPER': 1,
-  'PROVIDER_ADD': 2,
-  'PROVIDER_DELETE': 3,
-  'PROVIDER_UDPATE': 4,
-  'PROVIDER_GET': 5,
-  'PRODUCT_ADD': 6,
-  'PRODUCT_DELETE': 7,
-  'PRODUCT_UDPATE': 8,
-  'PRODUCT_GET': 9,
-  'PRODUCT_AUDIT': 10,
-  'PRODUCT_ASSESS': 11,
-  'PRODUCT_ONSALE': 12,
-  'PRODUCT_OFFSALE': 13,
-  'MANAGE_READONLY': 14,
-  'MANAGE_WRITE': 15,
+  'ADMIN': 1,
+  'GENERAL': 2,
+  'USER_READ': 3,
+  'USER_WRITE': 4,
+  'DEPT_READ': 5,
+  'DEPT_WRITE': 6,
+  'ROLE_READ': 7,
+  'ROLE_WRITE': 8,
 }
 
 //获取所有产品信息
@@ -41,9 +34,6 @@ export const adminCount = () => fetch('/role/countName');
 
 //获取用户数量
 export const getUserCount = () => fetch('/user/count');
-
-//获取订单列表
-export const getOrderList = () => fetch('/order/selectAll');
 
 //获取订单数量
 export const getOrderCount = () => fetch('/order/count');
@@ -87,6 +77,18 @@ export const updateRole = data => fetch('/role/update', data, 'POST');
 //删除某个角色
 export const deleteRole = data => fetch('/role/delete?id='+data.id, {}, "DELETE");
 
+//获取订单列表
+export const getOrderList = () => fetch('/order/selectAll');
+
+//增加某个订单
+export const addOrder = data => fetch('/order/insertSelective', data, "POST");
+
+//修改某个订单
+export const updateOrder = data => fetch('/order/update', data, 'POST');
+
+//删除某个角色
+export const deleteOrder = data => fetch('/order/delete?id='+data.id, {}, "DELETE");
+
 //获取操作列表
 export const getOperationList = () => fetch('/operation/selectAll');
 
@@ -110,6 +112,9 @@ export const addDeptRole = data => fetch('/roleDepartment/insertSelective', data
 
 //根据用户获取角色
 export const getRolesByDeptId = id => fetch('/department/selectRoleIdListByDepartmentId?departmentId='+id);
+
+//根据用户获取操作
+export const getOperationsByUserId = id => fetch('/operation/selectByUserId?userId='+id);
 
 // 鉴权操作
 export const Authorization = async (username) => {  

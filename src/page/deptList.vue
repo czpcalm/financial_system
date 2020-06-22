@@ -1,14 +1,14 @@
 <template>
     <div class="fillcontain">
         <head-top></head-top>
-        <el-button class="addbtn" type="primary" @click="showAddDept">添加部门</el-button>
+        <el-button class="addbtn" type="primary" @click="showAddDept" v-if="operationShow">添加部门</el-button>
         <el-dialog title="添加部门" v-model="addFormVisible">
                 <el-form :model="createForm">
                     <el-form-item label="部门名称" label-width="100px">
                         <el-input v-model="createForm.dept_name" auto-complete="off"></el-input>
                     </el-form-item>
                     <el-form-item label="角色选择" label-width="100px">
-                        <el-select multiple collapse-tags v-model="createForm.role_ids" placeholder="请选择部门所属的部门">
+                        <el-select multiple collapse-tags v-model="createForm.role_ids" placeholder="请选择部门所属的角色">
                             <el-option
                                 v-for="item in roles"
                                 :key="item.value"
@@ -58,7 +58,7 @@
                   label="所属角色"
                   prop="role_name">
                 </el-table-column>
-                <el-table-column label="操作" width="200">
+                <el-table-column label="操作" width="200" v-if="operationShow">
                   <template slot-scope="scope">
                     <el-button
                       size="mini"
@@ -86,7 +86,7 @@
                         <el-input v-model="updateForm.dept_name" auto-complete="off"></el-input>
                     </el-form-item>
                     <el-form-item label="角色选择" label-width="100px">
-                        <el-select multiple collapse-tags v-model="updateForm.role_ids" placeholder="请选择部门所属的部门">
+                        <el-select multiple collapse-tags v-model="updateForm.role_ids" placeholder="请选择部门所属的角色">
                             <el-option
                                 v-for="item in roles"
                                 :key="item.value"
@@ -110,6 +110,7 @@
     import headTop from '../components/headTop'
     import {getDeptList, addDept, updateDept, deleteDept} from '@/api/getData'
     import {getRoleList, getRolesByDeptId, addDeptRole} from '@/api/getData'
+    import {getUserList, getOperationsByUserId, OPERATION} from '@/api/getData'
     export default {
         data(){
             return {
@@ -134,16 +135,43 @@
                 dialogFormVisible: false,
                 addFormVisible:false,
 
-                user_auth: '',
+                operationShow: false,
             }
         },
         created(){
+            let username = localStorage.getItem("username");
+			this.auth(username);
             this.initData();
         },
     	components: {
     		headTop,
     	},
         methods: {
+            async auth(username) {
+                try{
+                    const users = await getUserList();
+                    let user_id = -1;
+                    users.data.forEach((item, index) => {
+                        if (item.username == username) {
+                            user_id = item.id;
+                        }
+                    })
+
+                    const operations = await getOperationsByUserId(user_id);
+                    operations.data.forEach((item, index) => {
+                        switch (item.id) {
+                            case OPERATION.ADMIN:
+                                this.operationShow = true;
+                                break;
+                            case OPERATION.DEPT_WRITE:
+                                this.operationShow = true;
+                                break;
+                        }
+                    })
+                }catch(err){
+                    console.log(err.message)
+                }
+            },
             async initData(){
     			try{
                     // 初始化角色信息
@@ -233,18 +261,10 @@
                             name: this.createForm.dept_name,
                         });
 
-                        // 根据部门名字查询部门编号
-                        let departments = await getDeptList();
-                        departments.data.forEach((item, index) => {
-                            if (item.name == this.createForm.dept_name) {
-                                dept_result.id = item.id;
-                            }
-                        })
-
                         // 添加部门-角色绑定
                         this.createForm.role_ids.forEach(async (item, index) => {
                             const dept_role_result = await addDeptRole({
-                                "departmentId": dept_result.id,
+                                "departmentId": dept_result.data.id,
                                 "roleId": item,
                             });
                         })
@@ -281,7 +301,7 @@
 
                         // TODO: 更新部门-角色绑定
                         // const dept_role_result = await updateDeptRole({
-                        //     dept_id: user_result.id,
+                        //     dept_id: user_result.data.id,
                         //     role_id: this.udpateForm.role_id,
                         // });
                     } catch(err) {

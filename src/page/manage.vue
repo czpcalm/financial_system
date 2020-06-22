@@ -14,11 +14,11 @@
 						<template slot="title"><i class="el-icon-plus"></i>订单管理</template>
 						<el-menu-item index="orderList">订单列表</el-menu-item>
 					</el-submenu>
-					<el-submenu index="4" v-if="isShow">
+					<el-submenu index="4">
 						<template slot="title"><i class="el-icon-star-on"></i>系统管理</template>
-						<el-menu-item index="userList" v-show="userShow">用户</el-menu-item>
-						<el-menu-item index="deptList" v-show="deptShow">部门</el-menu-item>
-						<el-menu-item index="roleList" v-show="roleShow">角色</el-menu-item>
+						<el-menu-item index="userList" v-if="userShow">用户</el-menu-item>
+						<el-menu-item index="deptList" v-if="deptShow">部门</el-menu-item>
+						<el-menu-item index="roleList" v-if="roleShow">角色</el-menu-item>
 					</el-submenu>
 
 					<!-- <el-submenu index="5"> -->
@@ -42,78 +42,52 @@
 </template>
 
 <script>
-		import {getUserList, getUser, getRolesByUserId, getRolesByDeptId, getOperationsByRoleId, OPERATION} from '@/api/getData'
+		import {getUserList, getOperationsByUserId, OPERATION} from '@/api/getData'
     export default {
 			data() {
 				return {
-					isShow: false,
 					userShow: false,
 					deptShow: false,
 					roleShow: false,
 				}
 			},
-			computed: {
-				defaultActive () {
-					let username = localStorage.getItem("username");
-					this.Authorization(username);
-				}
+			created() {
+				let username = localStorage.getItem("username");
+				this.auth(username);
 			},
 			methods: {
-				async Authorization(username) {
-					let user_id = '';
-					let dept_id = '';
-					let roles = [];
-					let operations = [];
-
-					// 获取用户对应角色
-					const users = await getUserList();
-					users.data.forEach((item, index) => {
+				async auth(username) {
+					try{
+						const users = await getUserList();
+						let user_id = -1;
+						users.data.forEach((item, index) => {
 							if (item.username == username) {
 									user_id = item.id;
 							}
-					})
-					if (typeof(user_id) != 'undefined') {
-						const roles_by_user_id = await getRolesByUserId(user_id);
-						roles.push(...roles_by_user_id.data.userIdList);
-					}
+						})
 
-					// 获取部门对应角色
-					const user = await getUser(user_id);
-					dept_id = user.data.departmentId;				
-					if (typeof(dept_id) != 'undefined') {
-						const roles_by_dept_id = await getRolesByDeptId(dept_id);
-						roles.push(...roles_by_dept_id.data.roleIdList);
+						const operations = await getOperationsByUserId(user_id);
+						operations.data.forEach((item, index) => {
+							switch (item.id) {
+								case OPERATION.ADMIN:
+									this.userShow = true;
+									this.deptShow = true;
+									this.roleShow = true;
+									break;
+								case OPERATION.USER_READ:
+									this.userShow = true;
+									break;
+								case OPERATION.DEPT_READ:
+									this.deptShow = true;
+									break;
+								case OPERATION.ROLE_READ:
+									this.roleShow = true;
+									break;
+							}
+						})
+					}catch(err){
+						console.log(err.message)
 					}
-
-					// 获取角色对应操作
-					roles.forEach(async (role_id, index) => {
-						const operations_by_role_id = await getOperationsByRoleId(role_id);
-						if (operations_by_role_id.data.operationIdList.length > 0) {
-								console.log(operations_by_role_id)
-								operations_by_role_id.data.operationIdList.forEach((it, idx) => {
-									// operations.push(it);
-									localStorage.setItem(it, true);
-									if (it == 1) {
-										this.isShow = true;
-										this.userShow = true;
-										this.deptShow = true;
-										this.roleShow = true;
-									}
-									if (it == 3) {
-										this.isShow = true;
-										this.userShow = true;
-									}
-									if (it == 5) {
-										this.isShow = true;
-										this.roleShow = true;
-									}
-									if (it == 7) {
-										this.isShow = true;
-										this.deptShow = true;
-									}
-								})
-						} 
-					})
 				}
 			}
     }

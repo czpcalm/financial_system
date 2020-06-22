@@ -1,7 +1,7 @@
 <template>
     <div class="fillcontain">
         <head-top></head-top>
-        <el-button class="addbtn" type="primary" @click="showAddUser" v-if="isShow">添加用户</el-button>
+        <el-button class="addbtn" type="primary" @click="showAddUser" v-if="operationShow">添加用户</el-button>
         <el-dialog title="添加用户" v-model="addFormVisible">
                 <el-form :model="createForm">
                     <el-form-item label="用户名称" label-width="100px">
@@ -78,7 +78,7 @@
                   label="所属角色"
                   prop="role_name">
                 </el-table-column>
-                <el-table-column label="操作" width="200" v-if="isShow">
+                <el-table-column label="操作" width="200" v-if="operationShow">
                   <template slot-scope="scope">
                     <el-button
                       size="mini"
@@ -150,11 +150,10 @@
     import headTop from '../components/headTop'
     import {getUserList, addUser, updateUser, deleteUser} from '@/api/getData'
     import {getDeptList, getRoleList, getRolesByUserId, addUserRole} from '@/api/getData'
+    import {getOperationsByUserId, OPERATION} from '@/api/getData'
     export default {
         data(){
             return {
-                isShow: true,
-
                 offset: 0,
                 limit: 20,
                 count: 0,
@@ -184,59 +183,44 @@
                 
                 dialogFormVisible: false,
                 addFormVisible:false,
+
+                operationShow: false,
             }
         },
     	components: {
     		headTop,
         },
         created() {
+            let username = localStorage.getItem("username");
+			this.auth(username);
             this.initData();
         },
-        // computed: {
-        //     defaultActive () {
-        //         let username = localStorage.getItem("username");
-        //         this.Authorization(username);
-        //     }
-        // },
         methods: {
-            async Authorization(username) {
-                let user_id = '';
-                let dept_id = '';
-                let roles = [];
-                let operations = [];
-
-                // 获取用户对应角色
-                const users = await getUserList();
-                users.data.forEach((item, index) => {
+            async auth(username) {
+                try{
+                    const users = await getUserList();
+                    let user_id = -1;
+                    users.data.forEach((item, index) => {
                         if (item.username == username) {
-                                user_id = item.id;
+                            user_id = item.id;
                         }
-                })
-                if (typeof(user_id) != 'undefined') {
-                    const roles_by_user_id = await getRolesByUserId(user_id);
-                    roles.push(...roles_by_user_id.data.userIdList);
-                }
+                    })
 
-                // 获取部门对应角色
-                const user = await getUser(user_id);
-                dept_id = user.data.departmentId;				
-                if (typeof(dept_id) != 'undefined') {
-                    const roles_by_dept_id = await getRolesByDeptId(dept_id);
-                    roles.push(...roles_by_dept_id.data.roleIdList);
+                    const operations = await getOperationsByUserId(user_id);
+                    console.log(operations)
+                    operations.data.forEach((item, index) => {
+                        switch (item.id) {
+                            case OPERATION.ADMIN:
+                                this.operationShow = true;
+                                break;
+                            case OPERATION.USER_WRITE:
+                                this.operationShow = true;
+                                break;
+                        }
+                    })
+                }catch(err){
+                    console.log(err.message)
                 }
-
-                // 获取角色对应操作
-                roles.forEach(async (role_id, index) => {
-                    const operations_by_role_id = await getOperationsByRoleId(role_id);
-                    if (operations_by_role_id.data.operationIdList.length > 0) {
-                            operations_by_role_id.data.operationIdList.forEach((it, idx) => {
-                                // operations.push(it);
-                                if (it == 3) {
-                                    this.isShow = true;
-                                }
-                            })
-                    } 
-                })
             },
             async initData(){
     			try{
@@ -353,19 +337,10 @@
                             departmentId: this.createForm.department_id,
                         });
 
-                        // 根据用户名字查询用户编号
-                        let users = await getUserList();
-                        users.data.forEach((item, index) => {
-                            if (item.username == this.createForm.user_name) {
-                                user_result.id = item.id;
-                            }
-                        })
-                        console.log(user_result.id)
-
                         // 添加用户-角色绑定
                         this.createForm.role_ids.forEach(async (item, index) => {
                             const user_role_result = await addUserRole({
-                                "userId": user_result.id,
+                                "userId": user_result.data.id,
                                 "roleId": item,
                             });
                         })
@@ -406,7 +381,7 @@
 
                         // TODO: 更新用户-角色绑定
                         // const user_role_result = await updateUserRole({
-                        //     user_id: user_result.id,
+                        //     user_id: user_result.data.id,
                         //     role_id: this.udpateForm.role_id,
                         // });
                     } catch(err) {

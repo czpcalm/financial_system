@@ -1,7 +1,7 @@
 <template>
     <div class="fillcontain">
         <head-top></head-top>
-        <el-button class="addbtn" type="primary" @click="showAddRole">添加角色</el-button>
+        <el-button class="addbtn" type="primary" @click="showAddRole" v-if="operationShow">添加角色</el-button>
         <el-dialog title="添加角色" v-model="addFormVisible">
                 <el-form :model="createForm">
                     <el-form-item label="角色名称" label-width="100px">
@@ -58,7 +58,7 @@
                   label="允许操作"
                   prop="operation_name">
                 </el-table-column>
-                <el-table-column label="操作" width="200">
+                <el-table-column label="操作" width="200" v-if="operationShow">
                   <template slot-scope="scope">
                     <el-button
                       size="mini"
@@ -107,9 +107,21 @@
 </template>
 
 <script>
+    var OPERATION_SHOW = {
+        'administrator': '全部操作',
+        'general_user': '进入系统',
+        'USER_READ': '用户(读)',
+        'USER_WRITE': '用户(写)',
+        'DEPT_READ': '部门(读)',
+        'DEPT_WRITE': '部门(写)',
+        'ROLE_READ': '角色(读)',
+        'ROLE_WRITE': '角色(写)',
+    }
+
     import headTop from '../components/headTop'
     import {getRoleList, addRole, updateRole, deleteRole} from '@/api/getData'
-    import {getOperationList, getOperationsByRoleId, addRoleOperation, getRoleOperationList} from '@/api/getData'
+    import {getOperationList, getOperationsByRoleId, addRoleOperation} from '@/api/getData'
+    import {getUserList, getOperationsByUserId, OPERATION} from '@/api/getData'
     export default {
         data(){
             return {
@@ -134,16 +146,43 @@
                 dialogFormVisible: false,
                 addFormVisible:false,
 
-                user_auth: '',
+                operationShow: false,
             }
         },
         created(){
+            let username = localStorage.getItem("username");
+			this.auth(username);
             this.initData();
         },
     	components: {
     		headTop,
     	},
         methods: {
+            async auth(username) {
+                try{
+                    const users = await getUserList();
+                    let user_id = -1;
+                    users.data.forEach((item, index) => {
+                        if (item.username == username) {
+                            user_id = item.id;
+                        }
+                    })
+
+                    const operations = await getOperationsByUserId(user_id);
+                    operations.data.forEach((item, index) => {
+                        switch (item.id) {
+                            case OPERATION.ADMIN:
+                                this.operationShow = true;
+                                break;
+                            case OPERATION.ROLE_WRITE:
+                                this.operationShow = true;
+                                break;
+                        }
+                    })
+                }catch(err){
+                    console.log(err.message)
+                }
+            },
             async initData(){
     			try{
                     // 初始化菜单权限
@@ -152,7 +191,7 @@
                     operations.data.forEach((item, index) => {
                         this.operations.push({
                             value: item.id,
-                            label: item.name,
+                            label: OPERATION_SHOW[item.name],
                         });
                     });
 
@@ -202,6 +241,7 @@
             async handleDelete(index, row) {
                 try{
                     try {
+                        // // TODO: 级联删除其它信息
                         // const user_res = await deleteUsers(row.role_id);
                         // const dept_res = await deleteDepts(row.role_id);
                         // const operation_res = await deleteOperations(row.role_id);
@@ -232,23 +272,15 @@
                 try{
                     try {
                         // 添加角色
-                        const role_result = await addRole({
-                            name: this.createForm.role_name,
-                        });
-
-                        // 根据角色名字查询角色编号
-                        let roles = await getRoleList();
-                        roles.data.forEach((item, index) => {
-                            if (item.name == this.createForm.role_name) {
-                                role_result.id = item.id;
-                            }
-                        })
+                        let role_data = {
+                            name: this.createForm.role_name
+                        }
+                        const role_result = await addRole(role_data);
 
                         // 添加角色-菜单绑定
                         this.createForm.operation_ids.forEach(async (item, index) => {
-                            console.log(item)
                             const role_operation_result = await addRoleOperation({
-                                "roleId": role_result.id,
+                                "roleId": role_result.data.id,
                                 "operationId": item,
                             });
                         })
@@ -278,34 +310,19 @@
                 try{
                     try {
                         // 更新角色
-                        var role_data = {
+                        let role_data = {
                             "id": this.updateForm.role_id, 
                             "name": this.updateForm.role_name,
                         }
                         const role_result = await updateRole(role_data)
 
-                        // 根据角色名字查询角色编号
-                        let roles = await getRoleList();
-                        roles.data.forEach((item, index) => {
-                            if (item.name == this.updateForm.role_name) {
-                                role_result.id = item.id;
-                            }
-                        })
-
-                        // 角色-菜单绑定
-                        this.updateForm.operation_ids.forEach(async (item, index) => {
-                            const role_operation_result = await addRoleOperation({
-                                "roleId": role_result.id,
-                                "operationId": item,
-                            });
-                        })
-
-                        // // 更新角色-操作绑定
-                        // var role_operation_data = {
-                        //     "role_id": this.updateForm.role_id,
-                        //     "operation_id": this.updateForm.operation_id
-                        // }
-                        // const role_operation_res = await updateRoleOperation(role_operation_data)
+                        // // TODO: 更新角色-操作绑定
+                        // this.updateForm.operation_ids.forEach(async (item, index) => {
+                        //     const role_operation_result = await addRoleOperation({
+                        //         "roleId": role_result.data.id,
+                        //         "operationId": item,
+                        //     });
+                        // })
                     } catch(err) {
                         console.log(err.message)
                     }
