@@ -139,24 +139,16 @@
             }
         },
         created(){
-            let username = localStorage.getItem("username");
-			this.auth(username);
+            let user_id = localStorage.getItem("user_id");
+			this.auth(user_id);
             this.initData();
         },
     	components: {
     		headTop,
     	},
         methods: {
-            async auth(username) {
-                try{
-                    const users = await getUserList();
-                    let user_id = -1;
-                    users.data.content.forEach((item, index) => {
-                        if (item.username == username) {
-                            user_id = item.id;
-                        }
-                    })
-
+            async auth(user_id) {
+                try{              
                     const operations = await getOperationsByUserId(user_id);
                     operations.data.forEach((item, index) => {
                         switch (item.id) {

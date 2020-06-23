@@ -65,7 +65,8 @@
 							this.$message({
 		                        type: 'success',
 		                        message: '登录成功'
-		                    });
+							});
+							localStorage.setItem('user_id', res.data.id)
 							this.$router.push('manage')
 						}else{
 							this.$message({
@@ -81,8 +82,6 @@
 						});
 						return false;
 					}
-
-					localStorage.setItem('username', this.loginForm.username)
 				});
 			},
 		},
