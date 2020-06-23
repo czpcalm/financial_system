@@ -11,9 +11,10 @@
 			</el-row> -->
             <el-row :gutter="20">
                 <el-col :span="4"><div class="data_list all_head"><span class="data_num head">总数据：</span></div></el-col>
-                <el-col :span="4"><div class="data_list"><span class="data_num">{{allUserCount}}</span> 注册用户</div></el-col>
-                <el-col :span="4"><div class="data_list"><span class="data_num">{{allOrderCount}}</span> 订单</div></el-col>
-                <el-col :span="4"><div class="data_list"><span class="data_num">{{allAdminCount}}</span> 管理员</div></el-col>
+                <el-col :span="4"><div class="data_list"><span class="data_num">{{allUserCount}}</span> 管理用户 </div></el-col>
+				<el-col :span="4"><div class="data_list"><span class="data_num">{{allDeptCount}}</span> 管理部门 </div></el-col>
+                <el-col :span="4"><div class="data_list"><span class="data_num">{{allOrderCount}}</span> 交易订单</div></el-col>
+                <!-- <el-col :span="4"><div class="data_list"><span class="data_num">{{allAdminCount}}</span> 管理员</div></el-col> -->
             </el-row>
 		</section>
 		<tendency :sevenDate='sevenDate' :sevenDay='sevenDay'></tendency>
@@ -25,15 +26,17 @@
 	import tendency from '../components/tendency' 
 	import dtime from 'time-formater'
 	import {userCount, orderCount, getUserCount, getOrderCount, adminDayCount, adminCount} from '@/api/getData'
+	import {getUserList, getDeptList, getOrderList} from '@/api/getData'
     export default {
     	data(){
     		return {
-    			userCount: null,
-    			orderCount: null,
-					adminCount: null,
-					allUserCount: null,
-					allOrderCount: null,
-					allAdminCount: null,
+    			// userCount: null,
+    			// orderCount: null,
+				// adminCount: null,
+				allUserCount: null,
+				allDeptCount: null,
+				allOrderCount: null,
+				// allAdminCount: null,
     			sevenDay: [],
     			sevenDate: [[],[],[]],
     		}
@@ -43,51 +46,48 @@
     		tendency,
     	},
     	mounted(){
-    		// this.initData();
+    		this.initData();
     		// for (let i = 6; i > -1; i--) {
     		// 	const date = dtime(new Date().getTime() - 86400000*i).format('YYYY-MM-DD')
     		// 	this.sevenDay.push(date)
     		// }
     		// this.getSevenData();
     	},
-        computed: {
-
-        },
     	methods: {
-    		// async initData(){
-				// const today = dtime().format('YYYY-MM-DD')
-				// // Promise.all([userCount(today), orderCount(today), adminDayCount(today), getUserCount(), getOrderCount(), adminCount()])
-				// Promise.all([getUserCount(), getOrderCount(), adminCount()])
-    		// 	.then(res => {
-    		// 		this.userCount = res[0].data.count;
-    		// 		this.orderCount = res[1].data.count;
-        //             this.adminCount = res[2].data.count;
-        //             this.allUserCount = res[3].data.count;
-        //             this.allOrderCount = res[4].data.count;
-				// 	this.allAdminCount = res[5].data.count;
-        //             this.allUserCount = res[0].data;
-        //             this.allOrderCount = res[1].data;
-				// 	this.allAdminCount = res[2];
-    		// 	}).catch(err => {
-    		// 		console.log(err)
-    		// 	})
-    		// },
+    		async initData(){
+				const today = dtime().format('YYYY-MM-DD')
+				// Promise.all([userCount(today), orderCount(today), adminDayCount(today), getUserCount(), getOrderCount(), adminCount()])
+				Promise.all([getUserList(), getDeptList(), getOrderList()])
+    			.then(res => {
+    				// this.userCount = res[0].data.count;
+    				// this.orderCount = res[1].data.count;
+                    // this.adminCount = res[2].data.count;
+                    // this.allUserCount = res[3].data.count;
+                    // this.allOrderCount = res[4].data.count;
+					// this.allAdminCount = res[5].data.count;
+					this.allUserCount = res[0].data.content.length;
+					this.allDeptCount = res[1].data.content.length;
+					this.allOrderCount = res[2].data.content.length;
+    			}).catch(err => {
+    				console.log(err)
+    			})
+    		},
     		// async getSevenData(){
     		// 	const apiArr = [[],[],[]];
     		// 	this.sevenDay.forEach(item => {
     		// 		apiArr[0].push(userCount(item))
     		// 		apiArr[1].push(orderCount(item))
-				// 	apiArr[2].push(adminDayCount(item))
+			// 		apiArr[2].push(adminDayCount(item))
     		// 	})
     		// 	const promiseArr = [...apiArr[0], ...apiArr[1], ...apiArr[2]]
     		// 	Promise.all(promiseArr).then(res => {
     		// 		const resArr = [[],[],[]];
-				// 	res.forEach((item, index) => {
-				// 		if (item.status == 1) {
-				// 			resArr[Math.floor(index/7)].push(item.count)
-				// 		}
-				// 	})
-				// 	this.sevenDate = resArr;
+			// 		res.forEach((item, index) => {
+			// 			if (item.status == 1) {
+			// 				resArr[Math.floor(index/7)].push(item.count)
+			// 			}
+			// 		})
+			// 		this.sevenDate = resArr;
     		// 	}).catch(err => {
     		// 		console.log(err)
     		// 	})
