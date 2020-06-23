@@ -102,9 +102,13 @@
     			try{
                     // 初始化用户信息
                     this.tableData = []
-                    const orders = await getOrderList();
-                    console.log(orders)
-                    orders.data.forEach(async (item,index)=>{
+                    let orders = await getOrderList();
+                    this.count = orders.data.content.length;
+                    orders = await getOrderList({
+                        pageNum: this.currentPage,
+                        pageSize: this.limit,
+                    });
+                    orders.data.content.forEach(async (item,index)=>{
                         let order_id = item.id;
                         let order_time = item.orderTime;
                         let user_name = item.username;
@@ -131,6 +135,11 @@
             },
             handleSizeChange(val) {
                 console.log(`每页 ${val} 条`);
+            },
+            handleCurrentChange(val) {
+                this.currentPage = val;
+                this.offset = (val - 1)*this.limit;
+                this.initData();
             },
         },
     }

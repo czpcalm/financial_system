@@ -40,7 +40,7 @@ export const getUserCount = () => fetch('/user/count');
 export const getOrderCount = () => fetch('/order/count');
 
 //获取用户列表
-export const getUserList = () => fetch('/user/selectAll');
+export const getUserList = data => fetch('/user/selectAll', data);
 
 //获取某个用户
 export const getUser = id => fetch('/user/selectOne?id='+id);
@@ -55,7 +55,7 @@ export const updateUser = data => fetch('/user/update', data, "PUT");
 export const deleteUser = data => fetch('/user/delete?id='+data.id, {}, "DELETE");
 
 //获取部门列表
-export const getDeptList = () => fetch('/department/selectAll');
+export const getDeptList = data => fetch('/department/selectAll', data);
 
 //增加某个部门
 export const addDept = data => fetch('/department/insertSelective', data, "POST");
@@ -67,7 +67,7 @@ export const updateDept = data => fetch('/department/update', data, "PUT");
 export const deleteDept = data => fetch('/department/delete?id='+data.id, {}, "DELETE");
 
 //获取角色列表
-export const getRoleList = () => fetch('/role/selectAll');
+export const getRoleList = data => fetch('/role/selectAll', data);
 
 //增加某个角色
 export const addRole = data => fetch('/role/insertSelective', data, "POST");
@@ -79,7 +79,7 @@ export const updateRole = data => fetch('/role/update', data, 'POST');
 export const deleteRole = data => fetch('/role/delete?id='+data.id, {}, "DELETE");
 
 //获取订单列表
-export const getOrderList = () => fetch('/order/selectAll');
+export const getOrderList = data => fetch('/order/selectAll', data);
 
 //增加某个订单
 export const addOrder = data => fetch('/order/insertSelective', data, "POST");

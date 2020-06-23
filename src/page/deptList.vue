@@ -151,7 +151,7 @@
                 try{
                     const users = await getUserList();
                     let user_id = -1;
-                    users.data.forEach((item, index) => {
+                    users.data.content.forEach((item, index) => {
                         if (item.username == username) {
                             user_id = item.id;
                         }
@@ -177,7 +177,7 @@
                     // 初始化角色信息
                     this.roles = []
                     const roles = await getRoleList();
-                    roles.data.forEach((item, index) => {
+                    roles.data.content.forEach((item, index) => {
                         this.roles.push({
                             value: item.id,
                             label: item.name,
@@ -186,8 +186,13 @@
 
                     // 初始化部门信息
                     this.tableData = []
-                    const depts = await getDeptList();
-                    depts.data.forEach(async (item,index)=>{
+                    let depts = await getDeptList();
+                    this.count = depts.data.content.length;
+                    depts = await getDeptList({
+                        pageNum: this.currentPage,
+                        pageSize: this.limit,
+                    });
+                    depts.data.content.forEach(async (item,index)=>{
                         let dept_id = item.id;
                         let dept_name = item.name;
                         let role_name = '';
@@ -222,6 +227,7 @@
             handleCurrentChange(val) {
                 this.currentPage = val;
                 this.offset = (val - 1)*this.limit;
+                this.initData();
             },
             handleEdit(index, row) {
                 this.updateForm = row;

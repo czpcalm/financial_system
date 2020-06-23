@@ -163,7 +163,7 @@
                 try{
                     const users = await getUserList();
                     let user_id = -1;
-                    users.data.forEach((item, index) => {
+                    users.data.content.forEach((item, index) => {
                         if (item.username == username) {
                             user_id = item.id;
                         }
@@ -198,8 +198,13 @@
 
                     // 初始化角色信息
                     this.tableData = []
-                    const roles = await getRoleList();
-                    roles.data.forEach(async (item,index)=>{
+                    let roles = await getRoleList();
+                    this.count = roles.data.content.length;
+                    roles = await getRoleList({
+                        pageNum: this.currentPage,
+                        pageSize: this.limit,
+                    });
+                    roles.data.content.forEach(async (item,index)=>{
                         let role_id = item.id;
                         let role_name = item.name;
                         let operation_name = '';
@@ -234,6 +239,7 @@
             handleCurrentChange(val) {
                 this.currentPage = val;
                 this.offset = (val - 1)*this.limit;
+                this.initData();
             },
             handleEdit(index, row) {
                 this.updateForm = row;

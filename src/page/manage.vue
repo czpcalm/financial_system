@@ -60,7 +60,7 @@
 					try{
 						const users = await getUserList();
 						let user_id = -1;
-						users.data.forEach((item, index) => {
+						users.data.content.forEach((item, index) => {
 							if (item.username == username) {
 									user_id = item.id;
 							}

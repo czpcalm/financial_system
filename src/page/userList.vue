@@ -200,7 +200,7 @@
                 try{
                     const users = await getUserList();
                     let user_id = -1;
-                    users.data.forEach((item, index) => {
+                    users.data.content.forEach((item, index) => {
                         if (item.username == username) {
                             user_id = item.id;
                         }
@@ -226,7 +226,7 @@
                     // 初始化角色信息
                     this.roles = []
                     const roles = await getRoleList();
-                    roles.data.forEach((item, index) => {
+                    roles.data.content.forEach((item, index) => {
                         this.roles.push({
                             value: item.id,
                             label: item.name,
@@ -236,7 +236,7 @@
                     // 初始化部门信息
                     this.departments = []
                     const departments = await getDeptList();
-                    departments.data.forEach((item, index) => {
+                    departments.data.content.forEach((item, index) => {
                         this.departments.push({
                             value: item.id,
                             label: item.name,
@@ -245,8 +245,13 @@
 
                     // 初始化用户信息
                     this.tableData = []
-                    const users = await getUserList();
-                    users.data.forEach(async (item,index)=>{
+                    let users = await getUserList();
+                    this.count = users.data.content.length;
+                    users = await getUserList({
+                        pageNum: this.currentPage,
+                        pageSize: this.limit,
+                    });
+                    users.data.content.forEach(async (item,index)=>{
                         let user_id = item.id;
                         let user_name = item.username;
                         let phone = item.phone;
@@ -293,6 +298,7 @@
             handleCurrentChange(val) {
                 this.currentPage = val;
                 this.offset = (val - 1)*this.limit;
+                this.initData();
             },
             handleEdit(index, row) {
                 this.updateForm = row;
